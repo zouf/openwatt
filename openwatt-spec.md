@@ -105,10 +105,10 @@ The profile chart and remaining-time readouts update immediately. Useful for tri
 ### KICKR Bike Buttons (Experimental)
 The KICKR Bike reports gear/button state over an **undocumented, reverse-engineered Wahoo proprietary characteristic** (`a026e039-0a7d-4ab3-97fa-f1500f9feb8b`, alongside the trainer-control characteristic `a026e005-...`). Because the byte layout isn't publicly specified, OpenWatt provides a live inspector rather than a hardcoded assumption:
 
-- After connecting the trainer, open **Trainer Buttons** to subscribe to the channel.
-- Raw incoming bytes are displayed live as you shift.
-- A **gear byte index** selector lets you identify which byte in the payload tracks gear position — adjust until the detected gear value changes correctly with your shifts.
-- Shift **up** and **down** events can each be bound to an action:
+- After connecting the trainer, the inspector subscribes to the channel.
+- Raw incoming bytes are displayed live in both hex and binary formats as you press buttons on the bike.
+- An **event log** tracks and displays exact bit flips (e.g. "Byte 3, Bit 1 went HIGH") when you press a button.
+- You can add custom **Bit Bindings**, mapping any specific byte/bit combination's "pressed" (HIGH) state to an action:
   - Skip section
   - Restart section
   - +30s / −30s on current section
@@ -117,10 +117,9 @@ The KICKR Bike reports gear/button state over an **undocumented, reverse-enginee
   - Toggle ERG/SIM
   - Start/pause
   - None
-- A "buttons control the workout" checkbox disables/enables binding without disconnecting.
-- On-screen "simulate shift up/down" buttons allow testing bindings without pedaling.
+- A "buttons control the workout" checkbox disables/enables binding execution without disconnecting.
 
-**Caveat**: SIM mode already uses the shifters for resistance via the bike's internal virtual shifting — binding shift events to app actions in SIM mode means each shift does double duty (changes resistance *and* triggers the bound action). Bindings are most useful in ERG mode, where the shifters otherwise have no effect.
+**Caveat**: SIM mode already uses the shifters for resistance via the bike's internal virtual shifting. Bindings are most useful in ERG mode, where the shifters otherwise have no effect.
 
 ---
 

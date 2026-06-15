@@ -108,38 +108,18 @@
           </div>
           
           <div class="space-y-3 text-xs">
-            <div class="bg-slate-900 p-3 rounded-lg font-mono text-slate-400 border border-slate-800 space-y-1">
+            <div class="bg-slate-900 p-3 rounded-lg font-mono text-slate-400 border border-slate-800 space-y-2">
               <div>Raw Data Stream Inspector:</div>
-              <div id="raw-byte-stream" class="text-slate-200 tracking-wider overflow-x-auto whitespace-nowrap">00 00 00 00 00 00 00 00</div>
-              <div class="mt-2 text-[11px] flex justify-between">
-                <span>Evaluated Byte Value: <strong id="detected-gear-val" class="text-emerald-400">0</strong></span>
+              <div id="raw-byte-stream" class="text-slate-200 tracking-wider overflow-x-auto whitespace-nowrap">00 00 00 00</div>
+              <div id="raw-binary-stream" class="text-slate-500 tracking-widest overflow-x-auto whitespace-nowrap text-[10px]">00000000</div>
+              <div class="mt-2 text-[10px] bg-slate-950 p-2 rounded h-20 overflow-y-auto" id="event-log">
+                <div class="text-slate-600 italic">Press buttons to see bitmask changes...</div>
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="block text-[11px] text-slate-400 mb-1">Target Byte Index</label>
-                <select id="select-gear-idx" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-slate-200"></select>
-              </div>
-              <div>
-                <label class="block text-[11px] text-slate-400 mb-1">Manual Testing</label>
-                <div class="grid grid-cols-2 gap-1">
-                  <button id="btn-sim-shift-down" class="bg-slate-700 hover:bg-slate-600 text-[10px] py-1 rounded text-white">Sim Down</button>
-                  <button id="btn-sim-shift-up" class="bg-slate-700 hover:bg-slate-600 text-[10px] py-1 rounded text-white">Sim Up</button>
-                </div>
-              </div>
+            <div class="space-y-2 pt-2 border-t border-slate-700" id="button-bindings">
             </div>
-
-            <div class="space-y-2 pt-2 border-t border-slate-700">
-              <div class="flex justify-between items-center">
-                <span>Value Step Up Action:</span>
-                <select id="action-shift-up" class="bg-slate-900 border border-slate-700 rounded p-1 w-32 text-slate-200"></select>
-              </div>
-              <div class="flex justify-between items-center">
-                <span>Value Step Down Action:</span>
-                <select id="action-shift-down" class="bg-slate-900 border border-slate-700 rounded p-1 w-32 text-slate-200"></select>
-              </div>
-            </div>
+            <button id="btn-add-binding" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white py-1.5 rounded text-xs transition">+ Add Bit Binding</button>
           </div>
         </div>
       </section>
@@ -288,7 +268,14 @@
       telemetry: { power: 0, target: 0, cadence: 0, hr: 0 },
       history: [], 
       trace: [], 
-      buttonConfig: { enabled: true, byteIndex: 3, actionUp: 'bias_up', actionDown: 'bias_down', lastValue: null },
+      buttonConfig: {
+        enabled: true,
+        bindings: [
+          { byteIndex: 3, bitIndex: 0, action: 'bias_up' },
+          { byteIndex: 3, bitIndex: 1, action: 'bias_down' }
+        ],
+        lastPayload: []
+      },
       ble: { trainer: null, hr: null, txChar: null, lastCommandTime: 0 }
     };
 
@@ -309,7 +296,7 @@
       if (p) state.profiles = JSON.parse(p);
       const ap = localStorage.getItem('openwatt_active_profile_v2');
       if (ap) state.activeProfileId = ap;
-      const bc = localStorage.getItem('openwatt_button_config_v2');
+      const bc = localStorage.getItem('openwatt_button_config_v3');
       if (bc) state.buttonConfig = JSON.parse(bc);
       
       const active = getActiveProfile();
@@ -319,7 +306,7 @@
     function saveStorage() {
       localStorage.setItem('openwatt_profiles_v2', JSON.stringify(state.profiles));
       localStorage.setItem('openwatt_active_profile_v2', state.activeProfileId);
-      localStorage.setItem('openwatt_button_config_v2', JSON.stringify(state.buttonConfig));
+      localStorage.setItem('openwatt_button_config_v3', JSON.stringify(state.buttonConfig));
     }
 
     function getActiveProfile() {
@@ -366,30 +353,56 @@
         selectWk.appendChild(opt);
       });
 
-      const byteSel = document.getElementById('select-gear-idx');
-      byteSel.innerHTML = '';
-      for(let i=0; i<20; i++) {
-        const o = document.createElement('option'); o.value = i; o.innerText = `Byte ${i}`;
-        if(state.buttonConfig.byteIndex === i) o.selected = true;
-        byteSel.appendChild(o);
-      }
+      const bindingsContainer = document.getElementById('button-bindings');
+      bindingsContainer.innerHTML = '';
+      state.buttonConfig.bindings.forEach((binding, index) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2 justify-between bg-slate-900 p-2 rounded border border-slate-700';
+        
+        let byteOpts = '';
+        for(let i=0; i<15; i++) byteOpts += `<option value="${i}" ${binding.byteIndex===i?'selected':''}>Byte ${i}</option>`;
+        
+        let bitOpts = '';
+        for(let i=0; i<8; i++) bitOpts += `<option value="${i}" ${binding.bitIndex===i?'selected':''}>Bit ${i}</option>`;
+        
+        let actOpts = '';
+        ACTION_REGISTRY.forEach(act => {
+          actOpts += `<option value="${act.id}" ${binding.action===act.id?'selected':''}>${act.name}</option>`;
+        });
 
-      const upActionSel = document.getElementById('action-shift-up');
-      const downActionSel = document.getElementById('action-shift-down');
-      upActionSel.innerHTML = ''; downActionSel.innerHTML = '';
-      ACTION_REGISTRY.forEach(act => {
-        const o1 = document.createElement('option'); o1.value = act.id; o1.innerText = act.name;
-        if(state.buttonConfig.actionUp === act.id) o1.selected = true;
-        upActionSel.appendChild(o1);
-
-        const o2 = document.createElement('option'); o2.value = act.id; o2.innerText = act.name;
-        if(state.buttonConfig.actionDown === act.id) o2.selected = true;
-        downActionSel.appendChild(o2);
+        row.innerHTML = `
+          <select class="bind-byte bg-slate-800 border border-slate-600 rounded p-1 text-[10px] text-slate-200" data-idx="${index}">${byteOpts}</select>
+          <select class="bind-bit bg-slate-800 border border-slate-600 rounded p-1 text-[10px] text-slate-200" data-idx="${index}">${bitOpts}</select>
+          <span class="text-slate-500 font-bold">→</span>
+          <select class="bind-action bg-slate-800 border border-slate-600 rounded p-1 text-[10px] text-slate-200 flex-1" data-idx="${index}">${actOpts}</select>
+          <button class="bind-delete text-red-500 hover:text-red-400 font-bold px-2" data-idx="${index}">✕</button>
+        `;
+        bindingsContainer.appendChild(row);
       });
+
+      document.querySelectorAll('.bind-byte').forEach(el => el.addEventListener('change', e => updateBinding(e, 'byteIndex')));
+      document.querySelectorAll('.bind-bit').forEach(el => el.addEventListener('change', e => updateBinding(e, 'bitIndex')));
+      document.querySelectorAll('.bind-action').forEach(el => el.addEventListener('change', e => updateBinding(e, 'action')));
+      document.querySelectorAll('.bind-delete').forEach(el => el.addEventListener('click', e => deleteBinding(e)));
 
       document.getElementById('chk-buttons-enable').checked = state.buttonConfig.enabled;
       document.getElementById('slider-bias').value = getActiveProfile().bias || 100;
       document.getElementById('label-bias').innerText = `${getActiveProfile().bias || 100}%`;
+    }
+
+    function updateBinding(e, field) {
+      const idx = parseInt(e.target.getAttribute('data-idx'), 10);
+      let val = e.target.value;
+      if (field === 'byteIndex' || field === 'bitIndex') val = parseInt(val, 10);
+      state.buttonConfig.bindings[idx][field] = val;
+      saveStorage();
+    }
+    
+    function deleteBinding(e) {
+      const idx = parseInt(e.target.getAttribute('data-idx'), 10);
+      state.buttonConfig.bindings.splice(idx, 1);
+      saveStorage();
+      buildUIElements();
     }
 
     /**
@@ -590,21 +603,46 @@
       
       // Update Inspector UI
       const hexStr = bytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+      const binStr = bytes.map(b => b.toString(2).padStart(8, '0')).join(' ');
       document.getElementById('raw-byte-stream').innerText = hexStr;
+      document.getElementById('raw-binary-stream').innerText = binStr;
       
-      const idx = state.buttonConfig.byteIndex;
-      if (idx < bytes.length) {
-        const targetValue = bytes[idx];
-        document.getElementById('detected-gear-val').innerText = targetValue;
-        
-        if (state.buttonConfig.enabled && state.buttonConfig.lastValue !== null) {
-          if (targetValue > state.buttonConfig.lastValue) {
-            executeBoundAction(state.buttonConfig.actionUp);
-          } else if (targetValue < state.buttonConfig.lastValue) {
-            executeBoundAction(state.buttonConfig.actionDown);
+      if (state.buttonConfig.lastPayload.length > 0) {
+        for (let i = 0; i < bytes.length; i++) {
+          if (i >= state.buttonConfig.lastPayload.length) break;
+          const oldByte = state.buttonConfig.lastPayload[i];
+          const newByte = bytes[i];
+          
+          if (oldByte !== newByte) {
+            const flipped = oldByte ^ newByte;
+            for (let bit = 0; bit < 8; bit++) {
+              if (flipped & (1 << bit)) {
+                const isHigh = (newByte & (1 << bit)) !== 0;
+                logEvent(`Byte ${i}, Bit ${bit} went ${isHigh ? 'HIGH' : 'LOW'}`);
+                
+                // Trigger action if button is pressed (HIGH)
+                if (isHigh && state.buttonConfig.enabled) {
+                  const binding = state.buttonConfig.bindings.find(b => b.byteIndex === i && b.bitIndex === bit);
+                  if (binding && binding.action !== 'none') {
+                    executeBoundAction(binding.action);
+                  }
+                }
+              }
+            }
           }
         }
-        state.buttonConfig.lastValue = targetValue;
+      }
+      state.buttonConfig.lastPayload = [...bytes];
+    }
+
+    function logEvent(msg) {
+      const logContainer = document.getElementById('event-log');
+      const entry = document.createElement('div');
+      entry.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      entry.className = 'text-emerald-400 border-b border-slate-800 pb-1 mb-1';
+      logContainer.prepend(entry);
+      if (logContainer.children.length > 20) {
+        logContainer.removeChild(logContainer.lastChild);
       }
     }
 
@@ -1038,12 +1076,12 @@
       });
 
       document.getElementById('chk-buttons-enable').addEventListener('change', (e) => { state.buttonConfig.enabled = e.target.checked; saveStorage(); });
-      document.getElementById('select-gear-idx').addEventListener('change', (e) => { state.buttonConfig.byteIndex = parseInt(e.target.value,10); saveStorage(); });
-      document.getElementById('action-shift-up').addEventListener('change', (e) => { state.buttonConfig.actionUp = e.target.value; saveStorage(); });
-      document.getElementById('action-shift-down').addEventListener('change', (e) => { state.buttonConfig.actionDown = e.target.value; saveStorage(); });
-
-      document.getElementById('btn-sim-shift-down').addEventListener('click', () => executeBoundAction(state.buttonConfig.actionDown));
-      document.getElementById('btn-sim-shift-up').addEventListener('click', () => executeBoundAction(state.buttonConfig.actionUp));
+      
+      document.getElementById('btn-add-binding').addEventListener('click', () => {
+        state.buttonConfig.bindings.push({ byteIndex: 3, bitIndex: 0, action: 'none' });
+        saveStorage();
+        buildUIElements();
+      });
 
       const dz = document.getElementById('drop-zone');
       dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('border-blue-500'); });
