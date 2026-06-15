@@ -503,6 +503,7 @@
         const device = await navigator.bluetooth.requestDevice({
           filters: [{ services: [0x1826] }],
           optionalServices: [
+            'a026ee0d-0a7d-4ab3-97fa-f1500f9feb8b',
             'a026ee01-0a7d-4ab3-97fa-f1500f9feb8b', 
             'a026ee0b-0a7d-4ab3-97fa-f1500f9feb8b',
             0x1818 // standard cycling power
@@ -537,7 +538,11 @@
         document.getElementById('status-trainer').innerText = `Connected: ${device.name}`;
         
         // Dynamically subscribe to all characteristics in Wahoo custom services
-        const wahooServiceUUIDs = ['a026ee01-0a7d-4ab3-97fa-f1500f9feb8b', 'a026ee0b-0a7d-4ab3-97fa-f1500f9feb8b'];
+        const wahooServiceUUIDs = [
+          'a026ee0d-0a7d-4ab3-97fa-f1500f9feb8b',
+          'a026ee01-0a7d-4ab3-97fa-f1500f9feb8b', 
+          'a026ee0b-0a7d-4ab3-97fa-f1500f9feb8b'
+        ];
         let subscribedAny = false;
         
         for (const svcUuid of wahooServiceUUIDs) {
