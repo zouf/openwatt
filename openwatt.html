@@ -119,7 +119,7 @@
 
             <div class="space-y-2 pt-2 border-t border-slate-700" id="button-bindings">
             </div>
-            <button id="btn-add-binding" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white py-1.5 rounded text-xs transition">+ Add Bit Binding</button>
+            <button id="btn-add-binding" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white py-1.5 rounded text-xs transition">+ Add Button Binding</button>
           </div>
         </div>
       </section>
@@ -248,9 +248,13 @@
       { id: 'minus30', name: '-30s on Section' },
       { id: 'bias_up', name: 'Bias +2%' },
       { id: 'bias_down', name: 'Bias -2%' },
+      { id: 'bias_up_1', name: 'Bias +1%' },
+      { id: 'bias_down_1', name: 'Bias -1%' },
       { id: 'grade_up', name: 'Grade +0.5%' },
       { id: 'grade_down', name: 'Grade -0.5%' },
       { id: 'toggle_mode', name: 'Toggle ERG/SIM' },
+      { id: 'set_erg', name: 'Set ERG Mode' },
+      { id: 'set_sim', name: 'Set SIM Mode' },
       { id: 'play_pause', name: 'Start/Pause' }
     ];
 
@@ -271,8 +275,10 @@
       buttonConfig: {
         enabled: true,
         bindings: [
-          { byteIndex: 3, bitIndex: 0, action: 'bias_up' },
-          { byteIndex: 3, bitIndex: 1, action: 'bias_down' }
+          { buttonId: '0001', action: 'bias_up_1' },
+          { buttonId: '8000', action: 'bias_down_1' },
+          { buttonId: '2000', action: 'set_erg' },
+          { buttonId: '0008', action: 'set_sim' }
         ],
         lastPayload: []
       },
@@ -359,11 +365,10 @@
         const row = document.createElement('div');
         row.className = 'flex items-center gap-2 justify-between bg-slate-900 p-2 rounded border border-slate-700';
         
-        let byteOpts = '';
-        for(let i=0; i<15; i++) byteOpts += `<option value="${i}" ${binding.byteIndex===i?'selected':''}>Byte ${i}</option>`;
-        
-        let bitOpts = '';
-        for(let i=0; i<8; i++) bitOpts += `<option value="${i}" ${binding.bitIndex===i?'selected':''}>Bit ${i}</option>`;
+        let btnOpts = '';
+        Object.entries(WAHOO_BUTTON_MAP).forEach(([prefix, name]) => {
+          btnOpts += `<option value="${prefix}" ${binding.buttonId===prefix?'selected':''}>${name}</option>`;
+        });
         
         let actOpts = '';
         ACTION_REGISTRY.forEach(act => {
@@ -371,8 +376,7 @@
         });
 
         row.innerHTML = `
-          <select class="bind-byte bg-slate-800 border border-slate-600 rounded p-1 text-[10px] text-slate-200" data-idx="${index}">${byteOpts}</select>
-          <select class="bind-bit bg-slate-800 border border-slate-600 rounded p-1 text-[10px] text-slate-200" data-idx="${index}">${bitOpts}</select>
+          <select class="bind-btn bg-slate-800 border border-slate-600 rounded p-1 text-[10px] text-slate-200 flex-1" data-idx="${index}">${btnOpts}</select>
           <span class="text-slate-500 font-bold">→</span>
           <select class="bind-action bg-slate-800 border border-slate-600 rounded p-1 text-[10px] text-slate-200 flex-1" data-idx="${index}">${actOpts}</select>
           <button class="bind-delete text-red-500 hover:text-red-400 font-bold px-2" data-idx="${index}">✕</button>
@@ -380,8 +384,7 @@
         bindingsContainer.appendChild(row);
       });
 
-      document.querySelectorAll('.bind-byte').forEach(el => el.addEventListener('change', e => updateBinding(e, 'byteIndex')));
-      document.querySelectorAll('.bind-bit').forEach(el => el.addEventListener('change', e => updateBinding(e, 'bitIndex')));
+      document.querySelectorAll('.bind-btn').forEach(el => el.addEventListener('change', e => updateBinding(e, 'buttonId')));
       document.querySelectorAll('.bind-action').forEach(el => el.addEventListener('change', e => updateBinding(e, 'action')));
       document.querySelectorAll('.bind-delete').forEach(el => el.addEventListener('click', e => deleteBinding(e)));
 
@@ -392,8 +395,7 @@
 
     function updateBinding(e, field) {
       const idx = parseInt(e.target.getAttribute('data-idx'), 10);
-      let val = e.target.value;
-      if (field === 'byteIndex' || field === 'bitIndex') val = parseInt(val, 10);
+      const val = e.target.value;
       state.buttonConfig.bindings[idx][field] = val;
       saveStorage();
     }
@@ -554,6 +556,8 @@
                 await char.startNotifications();
                 char.addEventListener('characteristicvaluechanged', handleWahooButtonPayload);
                 subscribedAny = true;
+                if (!state.ble.wahooChars) state.ble.wahooChars = [];
+                state.ble.wahooChars.push(char);
                 console.log(`Subscribed to Wahoo characteristic: ${char.uuid}`);
               }
             }
@@ -631,9 +635,22 @@
     /**
      * Wahoo Shifting & Button Event Interception Engine
      */
-    const lastPayloadsByUUID = {};
+    const WAHOO_BUTTON_MAP = {
+      '0001': 'Right Hood: Up',
+      '8000': 'Right Hood: Down',
+      '0008': 'Right Hood: Inside',
+      '0200': 'Left Hood: Up',
+      '0400': 'Left Hood: Down',
+      '2000': 'Left Hood: Inside',
+      '0004': 'Right Shifter: Up',
+      '0002': 'Right Shifter: Down',
+      '1000': 'Left Shifter: Up',
+      '0800': 'Left Shifter: Down',
+      '4000': 'Right Brake',
+      '0100': 'Left Brake'
+    };
+
     function handleWahooButtonPayload(e) {
-      const charUuid = e.target.uuid;
       const val = e.target.value;
       let bytes = [];
       for(let i=0; i<val.byteLength; i++) bytes.push(val.getUint8(i));
@@ -643,34 +660,23 @@
       document.getElementById('raw-byte-stream').innerText = hexStr;
       document.getElementById('raw-binary-stream').innerText = binStr;
       
-      const lastPayload = lastPayloadsByUUID[charUuid] || [];
-      
-      if (lastPayload.length > 0) {
-        for (let i = 0; i < bytes.length; i++) {
-          if (i >= lastPayload.length) break;
-          const oldByte = lastPayload[i];
-          const newByte = bytes[i];
-          
-          if (oldByte !== newByte) {
-            const flipped = oldByte ^ newByte;
-            for (let bit = 0; bit < 8; bit++) {
-              if (flipped & (1 << bit)) {
-                const isHigh = (newByte & (1 << bit)) !== 0;
-                logEvent(`Char ${charUuid.split('-')[0]} | Byte ${i}, Bit ${bit} went ${isHigh ? 'HIGH' : 'LOW'}`);
-                
-                // Trigger action if button is pressed (HIGH)
-                if (isHigh && state.buttonConfig.enabled) {
-                  const binding = state.buttonConfig.bindings.find(b => b.byteIndex === i && b.bitIndex === bit);
-                  if (binding && binding.action !== 'none') {
-                    executeBoundAction(binding.action);
-                  }
-                }
-              }
+      if (bytes.length === 3) {
+        const prefix = bytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).slice(0, 2).join('');
+        const buttonName = WAHOO_BUTTON_MAP[prefix] || `Unknown (${prefix})`;
+        const isPressed = (bytes[2] & 0x80) !== 0;
+        
+        if (isPressed) {
+          logEvent(`PRESSED: ${buttonName}`);
+          if (state.buttonConfig.enabled) {
+            const binding = state.buttonConfig.bindings.find(b => b.buttonId === prefix);
+            if (binding && binding.action !== 'none') {
+              executeBoundAction(binding.action);
             }
           }
+        } else {
+          logEvent(`RELEASED: ${buttonName}`);
         }
       }
-      lastPayloadsByUUID[charUuid] = [...bytes];
     }
 
     function logEvent(msg) {
@@ -694,8 +700,14 @@
       if (actionId === 'toggle_mode') {
         setExecutionMode(state.mode === 'ERG' ? 'SIM' : 'ERG');
       }
-      if (actionId === 'bias_up' || actionId === 'bias_down') {
-        const diff = actionId === 'bias_up' ? 2 : -2;
+      if (actionId === 'set_erg') setExecutionMode('ERG');
+      if (actionId === 'set_sim') setExecutionMode('SIM');
+      if (actionId.startsWith('bias_')) {
+        let diff = 0;
+        if (actionId === 'bias_up') diff = 2;
+        if (actionId === 'bias_down') diff = -2;
+        if (actionId === 'bias_up_1') diff = 1;
+        if (actionId === 'bias_down_1') diff = -1;
         const slider = document.getElementById('slider-bias');
         slider.value = Math.min(150, Math.max(50, parseInt(slider.value, 10) + diff));
         slider.dispatchEvent(new Event('input'));
@@ -1116,7 +1128,7 @@
       document.getElementById('chk-buttons-enable').addEventListener('change', (e) => { state.buttonConfig.enabled = e.target.checked; saveStorage(); });
       
       document.getElementById('btn-add-binding').addEventListener('click', () => {
-        state.buttonConfig.bindings.push({ byteIndex: 3, bitIndex: 0, action: 'none' });
+        state.buttonConfig.bindings.push({ buttonId: '0001', action: 'none' });
         saveStorage();
         buildUIElements();
       });
