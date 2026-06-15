@@ -502,12 +502,26 @@
         // Request FTMS ($0x1826) alongside Wahoo's Proprietary Shift Feature Block Service
         const device = await navigator.bluetooth.requestDevice({
           filters: [{ services: [0x1826] }],
-          optionalServices: ['a026e038-0a7d-4ab3-97fa-f1500f9feb8b']
+          optionalServices: [
+            'a026e038-0a7d-4ab3-97fa-f1500f9feb8b', 
+            'a026e001-0a7d-4ab3-97fa-f1500f9feb8b',
+            'a026e005-0a7d-4ab3-97fa-f1500f9feb8b',
+            0x1818 // standard cycling power
+          ]
         });
         
         document.getElementById('status-trainer').innerText = "Connecting to device server...";
         const server = await device.gatt.connect();
         state.ble.trainer = server;
+
+        logEvent(`Connected to: ${device.name}`);
+        
+        // Discover services to help debugging
+        try {
+          const services = await server.getPrimaryServices();
+          const svcList = services.map(s => s.uuid).join(', ');
+          logEvent(`Discovered Services: ${svcList}`);
+        } catch(e) { console.warn("Service enumeration failed", e); }
         
         const ftms = await server.getPrimaryService(0x1826);
         const dataChar = await ftms.getCharacteristic(0x2AD2);
@@ -529,8 +543,10 @@
           const btnChar = await wahooSvc.getCharacteristic('a026e039-0a7d-4ab3-97fa-f1500f9feb8b');
           await btnChar.startNotifications();
           btnChar.addEventListener('characteristicvaluechanged', handleWahooButtonPayload);
+          logEvent("Wahoo button stream successfully connected.");
         } catch(err) {
           console.warn("Wahoo button characteristic not found on this hardware variant.", err);
+          logEvent("Error: Wahoo button service not found. Your bike might use a different UUID.");
         }
       } catch (e) {
         document.getElementById('status-trainer').innerText = `GATT Fault: ${e.message}`;
