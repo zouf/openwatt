@@ -503,9 +503,8 @@
         const device = await navigator.bluetooth.requestDevice({
           filters: [{ services: [0x1826] }],
           optionalServices: [
-            'a026e038-0a7d-4ab3-97fa-f1500f9feb8b', 
-            'a026e001-0a7d-4ab3-97fa-f1500f9feb8b',
-            'a026e005-0a7d-4ab3-97fa-f1500f9feb8b',
+            'a026ee01-0a7d-4ab3-97fa-f1500f9feb8b', 
+            'a026ee0b-0a7d-4ab3-97fa-f1500f9feb8b',
             0x1818 // standard cycling power
           ]
         });
@@ -519,7 +518,7 @@
         // Discover services to help debugging
         try {
           const services = await server.getPrimaryServices();
-          const svcList = services.map(s => s.uuid).join(', ');
+          const svcList = services.map(s => s.uuid.split('-')[0]).join(', ');
           logEvent(`Discovered Services: ${svcList}`);
         } catch(e) { console.warn("Service enumeration failed", e); }
         
@@ -537,16 +536,31 @@
 
         document.getElementById('status-trainer').innerText = `Connected: ${device.name}`;
         
-        // Connect to Wahoo Button Stream Subsystem
-        try {
-          const wahooSvc = await server.getPrimaryService('a026e038-0a7d-4ab3-97fa-f1500f9feb8b');
-          const btnChar = await wahooSvc.getCharacteristic('a026e039-0a7d-4ab3-97fa-f1500f9feb8b');
-          await btnChar.startNotifications();
-          btnChar.addEventListener('characteristicvaluechanged', handleWahooButtonPayload);
-          logEvent("Wahoo button stream successfully connected.");
-        } catch(err) {
-          console.warn("Wahoo button characteristic not found on this hardware variant.", err);
-          logEvent("Error: Wahoo button service not found. Your bike might use a different UUID.");
+        // Dynamically subscribe to all characteristics in Wahoo custom services
+        const wahooServiceUUIDs = ['a026ee01-0a7d-4ab3-97fa-f1500f9feb8b', 'a026ee0b-0a7d-4ab3-97fa-f1500f9feb8b'];
+        let subscribedAny = false;
+        
+        for (const svcUuid of wahooServiceUUIDs) {
+          try {
+            const wahooSvc = await server.getPrimaryService(svcUuid);
+            const characteristics = await wahooSvc.getCharacteristics();
+            for (const char of characteristics) {
+              if (char.properties.notify || char.properties.indicate) {
+                await char.startNotifications();
+                char.addEventListener('characteristicvaluechanged', handleWahooButtonPayload);
+                subscribedAny = true;
+                console.log(`Subscribed to Wahoo characteristic: ${char.uuid}`);
+              }
+            }
+          } catch(err) {
+            console.warn(`Could not bind to Wahoo service ${svcUuid}`, err);
+          }
+        }
+        
+        if (subscribedAny) {
+          logEvent("Wahoo proprietary streams successfully connected.");
+        } else {
+          logEvent("Error: No notifying Wahoo characteristics found on this hardware variant.");
         }
       } catch (e) {
         document.getElementById('status-trainer').innerText = `GATT Fault: ${e.message}`;
