@@ -55,11 +55,11 @@
     </style>
   </head>
   <body
-    class="bg-[#1e1e1e] text-slate-200 selection:bg-blue-500/30 font-sans min-h-screen flex flex-col overflow-hidden"
+    class="bg-black text-slate-200 selection:bg-orange-500/30 font-sans h-screen flex flex-col overflow-hidden"
   >
-    <div class="max-w-7xl mx-auto space-y-6">
+    <div class="w-full h-screen flex flex-col">
       <header
-        class="flex justify-between items-center px-4 py-2 bg-[#1a1a1a] border-b border-[#333]"
+        class="flex justify-between items-center px-4 py-2 bg-[#111111] border-b border-[#333]"
       >
         <div class="flex items-center gap-6">
           <h1 class="text-lg font-black tracking-tighter text-white">
@@ -71,7 +71,7 @@
             <button
               onclick="switchTab('workout')"
               id="nav-workout"
-              class="text-blue-500 transition hover:text-blue-400"
+              class="text-orange-500 transition hover:text-orange-400"
             >
               Workout
             </button>
@@ -235,11 +235,11 @@
 
           <!-- Middle: Stats Bar & Full Bleed Chart -->
           <div
-            class="flex-1 w-full flex flex-col relative bg-[#181818] border-t border-[#333]"
+            class="flex-1 w-full flex flex-col relative bg-[#050505] border-t border-[#333]"
           >
             <!-- Stats Bar -->
             <div
-              class="w-full flex justify-between items-center px-4 py-2 border-b border-[#333] text-[9px] font-bold text-[#888888] uppercase tracking-[0.2em] bg-[#1a1a1a]"
+              class="w-full flex justify-between items-center px-4 py-2 border-b border-[#333] text-[9px] font-bold text-[#888888] uppercase tracking-[0.2em] bg-[#111111]"
             >
               <div class="text-lg leading-none cursor-pointer hover:text-white">
                 ≡
@@ -327,7 +327,7 @@
 
           <!-- Bottom Footer Bar -->
           <div
-            class="h-14 w-full bg-[#1a1a1a] border-t border-[#333] flex justify-between items-center px-4"
+            class="h-14 w-full bg-[#111111] border-t border-[#333] flex justify-between items-center px-4"
           >
             <!-- Intensity Control -->
             <div
@@ -405,7 +405,7 @@
               </button>
               <button
                 id="btn-engine-control"
-                class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-1.5 px-6 rounded text-xs tracking-widest transition uppercase ml-2"
+                class="bg-orange-600 hover:bg-orange-500 text-white font-bold py-1.5 px-6 rounded text-xs tracking-widest transition uppercase ml-2"
               >
                 Start
               </button>
@@ -416,11 +416,11 @@
         <!-- TAB: DEVICES -->
         <section
           id="tab-devices"
-          class="hidden w-full h-full absolute inset-0 overflow-y-auto p-8 bg-[#1e1e1e]"
+          class="hidden w-full h-full absolute inset-0 overflow-y-auto p-8 bg-black"
         >
           <div class="max-w-3xl mx-auto space-y-8">
             <div
-              class="bg-[#1a1a1a] p-6 rounded-xl border border-[#333] space-y-6"
+              class="bg-[#111111] p-6 rounded-xl border border-[#333] space-y-6"
             >
               <h2 class="text-xl font-bold tracking-tighter text-white">
                 Hardware Connectivity
@@ -428,7 +428,7 @@
               <div class="grid grid-cols-2 gap-4">
                 <button
                   id="btn-connect-trainer"
-                  class="bg-blue-600 hover:bg-blue-500 text-white font-bold tracking-widest uppercase py-3 rounded-lg text-xs transition"
+                  class="bg-orange-600 hover:bg-orange-500 text-white font-bold tracking-widest uppercase py-3 rounded-lg text-xs transition"
                 >
                   Connect Trainer
                 </button>
@@ -442,7 +442,7 @@
             </div>
 
             <div
-              class="bg-[#1a1a1a] p-6 rounded-xl border border-[#333] space-y-6"
+              class="bg-[#111111] p-6 rounded-xl border border-[#333] space-y-6"
             >
               <div class="flex justify-between items-center">
                 <h2 class="text-xl font-bold tracking-tighter text-white">
@@ -451,7 +451,7 @@
                 <input
                   type="checkbox"
                   id="chk-buttons-enable"
-                  class="w-4 h-4 text-blue-600 bg-[#111] border-[#333] rounded"
+                  class="w-4 h-4 text-orange-600 bg-[#111] border-[#333] rounded"
                 />
               </div>
 
@@ -494,11 +494,11 @@
         <!-- TAB: PROFILE -->
         <section
           id="tab-profile"
-          class="hidden w-full h-full absolute inset-0 overflow-y-auto p-8 bg-[#1e1e1e]"
+          class="hidden w-full h-full absolute inset-0 overflow-y-auto p-8 bg-black"
         >
           <div class="max-w-xl mx-auto space-y-8">
             <div
-              class="bg-[#1a1a1a] p-6 rounded-xl border border-[#333] space-y-6"
+              class="bg-[#111111] p-6 rounded-xl border border-[#333] space-y-6"
             >
               <div class="flex justify-between items-center">
                 <h2 class="text-xl font-bold tracking-tighter text-white">
@@ -507,7 +507,7 @@
                 <div class="flex bg-[#111] p-1 rounded-lg border border-[#333]">
                   <button
                     id="mode-erg"
-                    class="px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest transition bg-blue-600 text-white"
+                    class="px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest transition bg-orange-600 text-white"
                   >
                     ERG
                   </button>
@@ -576,7 +576,7 @@
           document.getElementById("tab-" + id).classList.add("hidden");
           document
             .getElementById("nav-" + id)
-            .classList.remove("text-blue-500");
+            .classList.remove("text-orange-500");
           document.getElementById("nav-" + id).classList.add("text-slate-500");
         });
         document.getElementById("tab-" + tabId).classList.remove("hidden");
@@ -584,7 +584,7 @@
         document
           .getElementById("nav-" + tabId)
           .classList.remove("text-slate-500");
-        document.getElementById("nav-" + tabId).classList.add("text-blue-500");
+        document.getElementById("nav-" + tabId).classList.add("text-orange-500");
       }
 
       const WORKOUT_PRESETS = [
@@ -812,7 +812,7 @@
           const chip = document.createElement("div");
           chip.className = `flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-semibold cursor-pointer transition ${
             isSelected
-              ? "bg-blue-600 border-blue-500 text-white shadow-md"
+              ? "bg-orange-600 border-blue-500 text-white shadow-md"
               : "bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600"
           }`;
 
@@ -1301,13 +1301,13 @@
 
         if (targetMode === "ERG") {
           mErg.className =
-            "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition bg-blue-600 text-white";
+            "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition bg-orange-600 text-white";
           mSim.className =
             "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition text-slate-400";
           simCtrl.classList.add("hidden");
         } else {
           mSim.className =
-            "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition bg-blue-600 text-white";
+            "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition bg-orange-600 text-white";
           mErg.className =
             "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition text-slate-400";
           simCtrl.classList.remove("hidden");
@@ -1514,7 +1514,7 @@
           state.runState = "PAUSED";
           document.getElementById("btn-engine-control").innerText = "Resume";
           document.getElementById("btn-engine-control").className =
-            "bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg text-xs tracking-widest transition uppercase shadow-lg";
+            "bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 px-6 rounded-lg text-xs tracking-widest transition uppercase shadow-lg";
         }
       }
 
@@ -1522,7 +1522,7 @@
         state.runState = "STOPPED";
         document.getElementById("btn-engine-control").innerText = "Start";
         document.getElementById("btn-engine-control").className =
-          "bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg text-xs tracking-widest transition uppercase shadow-lg";
+          "bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 px-6 rounded-lg text-xs tracking-widest transition uppercase shadow-lg";
         if (state.history.length > 5) executeDataTcxExportSequence();
         state.clockTime = 0;
         state.activeBlockIndex = 0;
