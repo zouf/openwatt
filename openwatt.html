@@ -1,1027 +1,1695 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>OpenWatt — ERG/SIM Trainer Cockpit</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body { background-color: #0f172a; color: #f8fafc; font-family: ui-sans-serif, system-ui, sans-serif; }
-    .zone-z1 { color: #94a3b8; } .bg-zone-z1 { background-color: #475569; }
-    .zone-z2 { color: #22c55e; } .bg-zone-z2 { background-color: #16a34a; }
-    .zone-z3 { color: #3b82f6; } .bg-zone-z3 { background-color: #2563eb; }
-    .zone-z4 { color: #eab308; } .bg-zone-z4 { background-color: #ca8a04; }
-    .zone-z5 { color: #f97316; } .bg-zone-z5 { background-color: #ea580c; }
-    .zone-z6 { color: #ef4444; } .bg-zone-z6 { background-color: #dc2626; }
-    .zone-z7 { color: #c084fc; } .bg-zone-z7 { background-color: #9333ea; }
-  </style>
-</head>
-<body class="p-6">
-  <div class="max-w-7xl mx-auto space-y-6">
-    <header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-800 p-4 rounded-xl border border-slate-700 gap-4">
-      <div>
-        <h1 class="text-2xl font-black tracking-tight text-white flex items-center gap-2">
-          OpenWatt <span class="text-xs font-mono font-normal bg-slate-700 px-2 py-1 rounded text-slate-400">v1.0.0</span>
-        </h1>
-        <p class="text-xs text-slate-400 mt-1">Direct BLE FTMS control cockpit • No servers, no tracking</p>
-      </div>
-      
-      <div class="flex items-center gap-3 flex-wrap">
-        <div id="profile-chips" class="flex gap-2"></div>
-        <button id="btn-add-profile" class="bg-slate-700 hover:bg-slate-600 text-white font-mono text-sm px-3 py-1.5 rounded-lg border border-slate-600 transition">
-          + Add Profile
-        </button>
-      </div>
-    </header>
-
-    <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      
-      <section class="space-y-6 lg:col-span-1">
-        
-        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
-          <h2 class="text-lg font-bold tracking-tight text-white">Hardware Connectivity</h2>
-          <div class="grid grid-cols-2 gap-3">
-            <button id="btn-connect-trainer" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition shadow-lg shadow-blue-900/20">
-              Connect Trainer
+  <head>
+    <meta charset="UTF-8" />
+    <title>OpenWatt — ERG/SIM Trainer Cockpit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        background-color: #0f172a;
+        color: #f8fafc;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+      }
+      .zone-z1 {
+        color: #94a3b8;
+      }
+      .bg-zone-z1 {
+        background-color: #475569;
+      }
+      .zone-z2 {
+        color: #22c55e;
+      }
+      .bg-zone-z2 {
+        background-color: #16a34a;
+      }
+      .zone-z3 {
+        color: #3b82f6;
+      }
+      .bg-zone-z3 {
+        background-color: #2563eb;
+      }
+      .zone-z4 {
+        color: #eab308;
+      }
+      .bg-zone-z4 {
+        background-color: #ca8a04;
+      }
+      .zone-z5 {
+        color: #f97316;
+      }
+      .bg-zone-z5 {
+        background-color: #ea580c;
+      }
+      .zone-z6 {
+        color: #ef4444;
+      }
+      .bg-zone-z6 {
+        background-color: #dc2626;
+      }
+      .zone-z7 {
+        color: #c084fc;
+      }
+      .bg-zone-z7 {
+        background-color: #9333ea;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-[#1e1e1e] text-slate-200 selection:bg-blue-500/30 font-sans min-h-screen flex flex-col overflow-hidden"
+  >
+    <div class="max-w-7xl mx-auto space-y-6">
+      <header
+        class="flex justify-between items-center px-4 py-2 bg-[#1a1a1a] border-b border-[#333]"
+      >
+        <div class="flex items-center gap-6">
+          <h1 class="text-lg font-black tracking-tighter text-white">
+            OpenWatt
+          </h1>
+          <nav
+            class="flex space-x-4 text-xs font-bold tracking-widest uppercase"
+          >
+            <button
+              onclick="switchTab('workout')"
+              id="nav-workout"
+              class="text-blue-500 transition hover:text-blue-400"
+            >
+              Workout
             </button>
-            <button id="btn-connect-hr" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition shadow-lg shadow-emerald-900/20">
-              Connect HR Strap
+            <button
+              onclick="switchTab('devices')"
+              id="nav-devices"
+              class="text-slate-500 transition hover:text-slate-300"
+            >
+              Devices
+            </button>
+            <button
+              onclick="switchTab('profile')"
+              id="nav-profile"
+              class="text-slate-500 transition hover:text-slate-300"
+            >
+              Profile
+            </button>
+          </nav>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2">
+            <label
+              class="text-[10px] uppercase font-bold text-slate-500 tracking-widest"
+              >Workout:</label
+            >
+            <select
+              id="select-workout"
+              class="bg-[#111] text-white border border-[#333] rounded px-2 py-1 text-xs font-bold focus:outline-none"
+            ></select>
+            <input
+              type="file"
+              id="file-input"
+              class="hidden"
+              accept=".zwo,.erg,.mrc"
+            />
+            <button
+              onclick="document.getElementById('file-input').click()"
+              class="bg-[#333] hover:bg-[#444] px-2 py-1 text-[10px] uppercase tracking-widest font-bold rounded text-white transition"
+            >
+              Upload File
             </button>
           </div>
-          <div class="text-xs font-mono space-y-1 text-slate-400 bg-slate-900 p-3 rounded-lg border border-slate-800">
-            <div id="status-trainer">Trainer: Disconnected (Demo Mode active)</div>
-            <div id="status-hr">Heart Rate: Disconnected</div>
-          </div>
+          <div class="w-px h-6 bg-[#333]"></div>
+          <div id="profile-chips" class="flex gap-2 text-xs"></div>
+          <button
+            id="btn-add-profile"
+            class="bg-[#333] hover:bg-[#444] text-white font-bold text-[10px] uppercase tracking-widest px-2 py-1 rounded transition"
+          >
+            + Profile
+          </button>
         </div>
+      </header>
 
-        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
-          <div class="flex justify-between items-center">
-            <h2 class="text-lg font-bold tracking-tight text-white">Execution Mode</h2>
-            <div class="flex bg-slate-900 p-1 rounded-lg border border-slate-700">
-              <button id="mode-erg" class="px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition bg-blue-600 text-white">ERG</button>
-              <button id="mode-sim" class="px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition text-slate-400">SIM</button>
-            </div>
-          </div>
-          
-          <div id="sim-controls" class="hidden space-y-3 bg-slate-900 p-4 rounded-lg border border-slate-800">
-            <div class="flex justify-between items-center">
-              <label class="text-sm font-medium text-slate-300">Virtual Simulation Grade</label>
-              <span id="label-grade" class="text-lg font-mono font-bold text-emerald-400">0.0%</span>
-            </div>
-            <input id="slider-grade" type="range" min="-10" max="20" step="0.5" value="0" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
-            <div class="grid grid-cols-2 gap-2">
-              <button id="btn-grade-down" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 text-xs py-1.5 rounded font-mono">-0.5%</button>
-              <button id="btn-grade-up" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 text-xs py-1.5 rounded font-mono">+0.5%</button>
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-slate-300">Target Scale Intensity Bias</span>
-              <span id="label-bias" class="font-mono font-bold text-yellow-400">100%</span>
-            </div>
-            <div class="flex items-center gap-3">
-              <button id="btn-bias-down" class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-3 py-1 rounded">-</button>
-              <input id="slider-bias" type="range" min="50" max="150" step="1" value="100" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
-              <button id="btn-bias-up" class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-3 py-1 rounded">+</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
-          <h2 class="text-lg font-bold tracking-tight text-white">Workout Selection</h2>
-          <div class="space-y-2">
-            <label class="block text-xs uppercase tracking-wider font-semibold text-slate-400">Built-in Library</label>
-            <select id="select-workout" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"></select>
-          </div>
-          
-          <div id="drop-zone" class="border-2 border-dashed border-slate-600 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition bg-slate-900/50">
-            <p class="text-xs text-slate-300 font-medium">Drag & Drop Workout File</p>
-            <p class="text-[10px] text-slate-500 mt-1">Supports raw .zwo, .erg, or .mrc formats</p>
-            <input type="file" id="file-input" class="hidden" accept=".zwo,.erg,.mrc">
-          </div>
-        </div>
-
-        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
-          <div class="flex justify-between items-center">
-            <h2 class="text-lg font-bold tracking-tight text-white">KICKR Bike Buttons</h2>
-            <input type="checkbox" id="chk-buttons-enable" class="w-4 h-4 text-blue-600 bg-slate-900 border-slate-700 rounded focus:ring-blue-500">
-          </div>
-          
-          <div class="space-y-3 text-xs">
-            <div class="bg-slate-900 p-3 rounded-lg font-mono text-slate-400 border border-slate-800 space-y-2">
-              <div>Raw Data Stream Inspector:</div>
-              <div id="raw-byte-stream" class="text-slate-200 tracking-wider overflow-x-auto whitespace-nowrap">00 00 00 00</div>
-              <div id="raw-binary-stream" class="text-slate-500 tracking-widest overflow-x-auto whitespace-nowrap text-[10px]">00000000</div>
-              <div class="mt-2 text-[10px] bg-slate-950 p-2 rounded h-20 overflow-y-auto" id="event-log">
-                <div class="text-slate-600 italic">Press buttons to see bitmask changes...</div>
+      <main class="flex-1 flex flex-col relative">
+        <!-- TAB: WORKOUT (TrainerRoad Replica) -->
+        <section
+          id="tab-workout"
+          class="flex-1 flex flex-col w-full h-full block absolute inset-0"
+        >
+          <!-- Top Grid -->
+          <div
+            class="grid grid-cols-3 w-full px-12 pt-8 pb-4 h-[40%] min-h-[250px]"
+          >
+            <!-- LEFT: Power & Target -->
+            <div class="flex flex-col items-center justify-center space-y-8">
+              <div class="text-center">
+                <div
+                  class="text-[11px] font-bold tracking-[0.25em] text-[#aaaaaa] uppercase mb-1"
+                >
+                  Power
+                </div>
+                <div
+                  id="val-power"
+                  class="text-[80px] leading-none font-black font-sans text-white tracking-tighter"
+                >
+                  ---
+                </div>
+                <div
+                  id="zone-power"
+                  class="text-[9px] font-bold uppercase tracking-widest text-transparent mt-1 h-3"
+                ></div>
+              </div>
+              <div class="text-center">
+                <div
+                  class="text-[11px] font-bold tracking-[0.25em] text-[#aaaaaa] uppercase mb-1"
+                >
+                  Target
+                </div>
+                <div
+                  id="val-target"
+                  class="text-[100px] leading-none font-black font-sans text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+                >
+                  0
+                </div>
+                <div id="val-target-sub" class="hidden"></div>
               </div>
             </div>
 
-            <div class="space-y-2 pt-2 border-t border-slate-700" id="button-bindings">
+            <!-- CENTER: Interval Time & Workout Time -->
+            <div class="flex flex-col items-center justify-center space-y-8">
+              <div class="text-center">
+                <div
+                  class="text-[11px] font-bold tracking-[0.25em] text-[#aaaaaa] uppercase mb-1"
+                >
+                  Interval Time
+                </div>
+                <div
+                  id="time-block"
+                  class="text-[110px] leading-none font-black font-sans text-white tracking-tighter"
+                >
+                  00:00
+                </div>
+              </div>
+              <div class="text-center">
+                <div
+                  class="text-[11px] font-bold tracking-[0.25em] text-[#aaaaaa] uppercase mb-1"
+                >
+                  Workout Time
+                </div>
+                <div
+                  id="time-elapsed"
+                  class="text-[110px] leading-none font-black font-sans text-white tracking-tighter"
+                >
+                  0:00:00
+                </div>
+                <div id="time-remaining" class="hidden"></div>
+              </div>
             </div>
-            <button id="btn-add-binding" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white py-1.5 rounded text-xs transition">+ Add Button Binding</button>
+
+            <!-- RIGHT: Heart Rate & Cadence -->
+            <div class="flex flex-col items-center justify-center space-y-8">
+              <div class="text-center">
+                <div
+                  class="text-[11px] font-bold tracking-[0.25em] text-[#aaaaaa] uppercase mb-1"
+                >
+                  Heart Rate
+                </div>
+                <div
+                  id="val-hr"
+                  class="text-[80px] leading-none font-black font-sans text-white tracking-tighter"
+                >
+                  ---
+                </div>
+              </div>
+              <div class="text-center">
+                <div
+                  class="text-[11px] font-bold tracking-[0.25em] text-[#aaaaaa] uppercase mb-1"
+                >
+                  Cadence
+                </div>
+                <div
+                  id="val-cadence"
+                  class="text-[80px] leading-none font-black font-sans text-white tracking-tighter"
+                >
+                  ---
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
 
-      <section class="lg:col-span-2 space-y-6">
-        
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center relative overflow-hidden">
-            <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Power Output</div>
-            <div id="val-power" class="text-5xl font-black font-mono my-1 text-white">0</div>
-            <div id="zone-power" class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-slate-700 text-slate-300 inline-block">Z1 - Recovery</div>
-            <div id="indicator-power-strip" class="absolute bottom-0 left-0 right-0 h-1.5 bg-slate-600"></div>
+          <!-- Middle: Stats Bar & Full Bleed Chart -->
+          <div
+            class="flex-1 w-full flex flex-col relative bg-[#181818] border-t border-[#333]"
+          >
+            <!-- Stats Bar -->
+            <div
+              class="w-full flex justify-between items-center px-4 py-2 border-b border-[#333] text-[9px] font-bold text-[#888888] uppercase tracking-[0.2em] bg-[#1a1a1a]"
+            >
+              <div class="text-lg leading-none cursor-pointer hover:text-white">
+                ≡
+              </div>
+              <div class="flex gap-12">
+                <div class="text-center">
+                  <div
+                    class="text-white text-xs font-black tracking-widest mb-0.5"
+                  >
+                    ---
+                  </div>
+                  <div>INT POW</div>
+                </div>
+                <div class="text-center">
+                  <div
+                    class="text-white text-xs font-black tracking-widest mb-0.5"
+                  >
+                    ---
+                  </div>
+                  <div>INT HR</div>
+                </div>
+                <div class="text-center">
+                  <div
+                    class="text-white text-xs font-black tracking-widest mb-0.5"
+                  >
+                    ---
+                  </div>
+                  <div>INT CAD</div>
+                </div>
+                <div class="text-center">
+                  <div
+                    class="text-white text-xs font-black tracking-widest mb-0.5"
+                  >
+                    ---
+                  </div>
+                  <div>TSS</div>
+                </div>
+                <div class="text-center">
+                  <div
+                    class="text-white text-xs font-black tracking-widest mb-0.5"
+                  >
+                    ---
+                  </div>
+                  <div>TOTAL KJ</div>
+                </div>
+                <div class="text-center">
+                  <div
+                    class="text-white text-xs font-black tracking-widest mb-0.5"
+                  >
+                    ---
+                  </div>
+                  <div>NP</div>
+                </div>
+                <div class="text-center">
+                  <div
+                    class="text-white text-xs font-black tracking-widest mb-0.5"
+                  >
+                    ---
+                  </div>
+                  <div>AVG POW</div>
+                </div>
+              </div>
+              <div class="cursor-pointer hover:text-white">STATS ∧</div>
+            </div>
+
+            <!-- Charts -->
+            <div class="relative flex-1 w-full overflow-hidden mt-8">
+              <div id="indicator-target-strip" class="hidden"></div>
+              <div id="indicator-power-strip" class="hidden"></div>
+              <!-- Huge canvas taking up bottom half completely -->
+              <canvas
+                id="canvas-profile"
+                width="1200"
+                height="400"
+                class="absolute inset-0 w-full h-full opacity-60 mix-blend-screen"
+              ></canvas>
+              <canvas
+                id="canvas-trace"
+                width="1200"
+                height="400"
+                class="absolute inset-0 w-full h-full"
+              ></canvas>
+            </div>
           </div>
-          <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center relative overflow-hidden">
-            <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Target Objective</div>
-            <div id="val-target" class="text-5xl font-black font-mono my-1 text-slate-300">0</div>
-            <div id="val-target-sub" class="text-[10px] font-mono text-slate-400">100% Target Base</div>
-            <div id="indicator-target-strip" class="absolute bottom-0 left-0 right-0 h-1.5 bg-slate-600"></div>
+
+          <!-- Bottom Footer Bar -->
+          <div
+            class="h-14 w-full bg-[#1a1a1a] border-t border-[#333] flex justify-between items-center px-4"
+          >
+            <!-- Intensity Control -->
+            <div
+              class="flex items-center gap-1 bg-[#111] px-1 py-1 rounded border border-[#333]"
+            >
+              <button
+                id="btn-bias-down"
+                class="text-[#888] hover:text-white px-2 text-xs font-bold"
+              >
+                v
+              </button>
+              <span
+                id="label-bias"
+                class="text-white font-bold text-xs tracking-widest min-w-[50px] text-center"
+                >100%</span
+              >
+              <button
+                id="btn-bias-up"
+                class="text-[#888] hover:text-white px-2 text-xs font-bold"
+              >
+                ^
+              </button>
+              <input
+                id="slider-bias"
+                type="range"
+                min="50"
+                max="150"
+                step="1"
+                value="100"
+                class="hidden"
+              />
+            </div>
+
+            <!-- Device Status -->
+            <div class="flex items-center gap-4">
+              <div
+                id="status-trainer"
+                class="bg-red-600 text-white px-3 py-1 rounded text-[10px] font-bold tracking-widest uppercase flex items-center gap-2"
+              >
+                Trainer: Disconnected
+              </div>
+              <div
+                id="status-hr"
+                class="bg-red-600 text-white px-3 py-1 rounded text-[10px] font-bold tracking-widest uppercase flex items-center gap-2"
+              >
+                HR: Disconnected
+              </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex gap-2">
+              <button
+                id="btn-seg-restart"
+                class="bg-[#333] hover:bg-[#444] text-white font-bold py-1.5 px-3 rounded text-[10px] tracking-widest uppercase transition"
+              >
+                Restart
+              </button>
+              <button
+                id="btn-seg-minus"
+                class="bg-[#333] hover:bg-[#444] text-white font-bold py-1.5 px-3 rounded text-[10px] tracking-widest uppercase transition"
+              >
+                - 30s
+              </button>
+              <button
+                id="btn-seg-plus"
+                class="bg-[#333] hover:bg-[#444] text-white font-bold py-1.5 px-3 rounded text-[10px] tracking-widest uppercase transition"
+              >
+                + 1 Min
+              </button>
+              <button
+                id="btn-seg-skip"
+                class="bg-[#333] hover:bg-[#444] text-white font-bold py-1.5 px-3 rounded text-[10px] tracking-widest uppercase transition"
+              >
+                Skip
+              </button>
+              <button
+                id="btn-engine-control"
+                class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-1.5 px-6 rounded text-xs tracking-widest transition uppercase ml-2"
+              >
+                Start
+              </button>
+            </div>
           </div>
-          <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center">
-            <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Cadence Rate</div>
-            <div id="val-cadence" class="text-5xl font-black font-mono my-1 text-white">0</div>
-            <div class="text-[10px] text-slate-500 font-mono">Revolutions / Min</div>
+        </section>
+
+        <!-- TAB: DEVICES -->
+        <section
+          id="tab-devices"
+          class="hidden w-full h-full absolute inset-0 overflow-y-auto p-8 bg-[#1e1e1e]"
+        >
+          <div class="max-w-3xl mx-auto space-y-8">
+            <div
+              class="bg-[#1a1a1a] p-6 rounded-xl border border-[#333] space-y-6"
+            >
+              <h2 class="text-xl font-bold tracking-tighter text-white">
+                Hardware Connectivity
+              </h2>
+              <div class="grid grid-cols-2 gap-4">
+                <button
+                  id="btn-connect-trainer"
+                  class="bg-blue-600 hover:bg-blue-500 text-white font-bold tracking-widest uppercase py-3 rounded-lg text-xs transition"
+                >
+                  Connect Trainer
+                </button>
+                <button
+                  id="btn-connect-hr"
+                  class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold tracking-widest uppercase py-3 rounded-lg text-xs transition"
+                >
+                  Connect HR Strap
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="bg-[#1a1a1a] p-6 rounded-xl border border-[#333] space-y-6"
+            >
+              <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold tracking-tighter text-white">
+                  KICKR Bike Buttons
+                </h2>
+                <input
+                  type="checkbox"
+                  id="chk-buttons-enable"
+                  class="w-4 h-4 text-blue-600 bg-[#111] border-[#333] rounded"
+                />
+              </div>
+
+              <div class="space-y-4">
+                <div
+                  class="bg-[#111] p-4 rounded-lg font-mono text-[#888] border border-[#333] space-y-2 text-xs"
+                >
+                  <div class="text-[10px] uppercase font-bold tracking-widest">
+                    Raw Data Stream Inspector
+                  </div>
+                  <div id="raw-byte-stream" class="text-slate-300">
+                    00 00 00 00
+                  </div>
+                  <div id="raw-binary-stream" class="text-[#555]">00000000</div>
+                  <div
+                    class="mt-2 text-[10px] bg-black p-2 rounded h-24 overflow-y-auto"
+                    id="event-log"
+                  >
+                    <div class="italic text-[#555]">
+                      Press buttons to see bitmask changes...
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  class="space-y-2 pt-4 border-t border-[#333]"
+                  id="button-bindings"
+                ></div>
+                <button
+                  id="btn-add-binding"
+                  class="w-full bg-[#333] hover:bg-[#444] text-white font-bold uppercase tracking-widest text-[10px] py-2 rounded transition"
+                >
+                  + Add Button Binding
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center">
-            <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Heart Rate</div>
-            <div id="val-hr" class="text-5xl font-black font-mono my-1 text-red-500">0</div>
-            <div class="text-[10px] text-slate-500 font-mono">Beats / Min</div>
+        </section>
+
+        <!-- TAB: PROFILE -->
+        <section
+          id="tab-profile"
+          class="hidden w-full h-full absolute inset-0 overflow-y-auto p-8 bg-[#1e1e1e]"
+        >
+          <div class="max-w-xl mx-auto space-y-8">
+            <div
+              class="bg-[#1a1a1a] p-6 rounded-xl border border-[#333] space-y-6"
+            >
+              <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold tracking-tighter text-white">
+                  Execution Mode
+                </h2>
+                <div class="flex bg-[#111] p-1 rounded-lg border border-[#333]">
+                  <button
+                    id="mode-erg"
+                    class="px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest transition bg-blue-600 text-white"
+                  >
+                    ERG
+                  </button>
+                  <button
+                    id="mode-sim"
+                    class="px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest transition text-[#666]"
+                  >
+                    SIM
+                  </button>
+                </div>
+              </div>
+
+              <div
+                id="sim-controls"
+                class="hidden space-y-4 bg-[#111] p-5 rounded-lg border border-[#333]"
+              >
+                <div class="flex justify-between items-center">
+                  <label
+                    class="text-xs uppercase font-bold tracking-widest text-[#888]"
+                    >Virtual Grade</label
+                  >
+                  <span
+                    id="label-grade"
+                    class="text-xl font-black font-sans text-white"
+                    >0.0%</span
+                  >
+                </div>
+                <input
+                  id="slider-grade"
+                  type="range"
+                  min="-10"
+                  max="20"
+                  step="0.5"
+                  value="0"
+                  class="w-full h-2 bg-[#333] rounded-lg appearance-none"
+                />
+                <div class="grid grid-cols-2 gap-2">
+                  <button
+                    id="btn-grade-down"
+                    class="bg-[#222] hover:bg-[#333] text-white text-[10px] font-bold uppercase tracking-widest py-2 rounded"
+                  >
+                    -0.5%
+                  </button>
+                  <button
+                    id="btn-grade-up"
+                    class="bg-[#222] hover:bg-[#333] text-white text-[10px] font-bold uppercase tracking-widest py-2 rounded"
+                  >
+                    +0.5%
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
+      </main>
+    </div>
 
-        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 grid grid-cols-3 gap-2 text-center font-mono text-sm">
-          <div>
-            <span class="block text-[10px] uppercase text-slate-500 tracking-wider font-sans font-bold">Elapsed Runtime</span>
-            <span id="time-elapsed" class="text-xl font-bold text-slate-200">00:00:00</span>
-          </div>
-          <div>
-            <span class="block text-[10px] uppercase text-slate-500 tracking-wider font-sans font-bold">Remaining Duration</span>
-            <span id="time-remaining" class="text-xl font-bold text-slate-200">00:00:00</span>
-          </div>
-          <div>
-            <span class="block text-[10px] uppercase text-slate-500 tracking-wider font-sans font-bold">Interval Segment</span>
-            <span id="time-block" class="text-xl font-bold text-yellow-500">00:00</span>
-          </div>
-        </div>
+    <script>
+      /**
+       * Application States and Constant Repositories
+       */
 
-        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center gap-3">
-          <div class="flex gap-2">
-            <button id="btn-seg-restart" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-semibold py-2 px-4 rounded-lg text-xs tracking-wide transition uppercase">
-              Restart [←]
-            </button>
-            <button id="btn-seg-minus" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-semibold py-2 px-4 rounded-lg text-xs tracking-wide transition uppercase">
-              -30s [−]
-            </button>
-            <button id="btn-seg-plus" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-semibold py-2 px-4 rounded-lg text-xs tracking-wide transition uppercase">
-              +30s [+]
-            </button>
-            <button id="btn-seg-skip" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-semibold py-2 px-4 rounded-lg text-xs tracking-wide transition uppercase">
-              Skip [→]
-            </button>
-          </div>
-          <div>
-            <button id="btn-engine-control" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg text-xs tracking-widest transition uppercase shadow-lg shadow-blue-900/30">
-              Start
-            </button>
-          </div>
-        </div>
+      function switchTab(tabId) {
+        ["workout", "devices", "profile"].forEach((id) => {
+          document.getElementById("tab-" + id).classList.remove("block");
+          document.getElementById("tab-" + id).classList.add("hidden");
+          document
+            .getElementById("nav-" + id)
+            .classList.remove("text-blue-500");
+          document.getElementById("nav-" + id).classList.add("text-slate-500");
+        });
+        document.getElementById("tab-" + tabId).classList.remove("hidden");
+        document.getElementById("tab-" + tabId).classList.add("block");
+        document
+          .getElementById("nav-" + tabId)
+          .classList.remove("text-slate-500");
+        document.getElementById("nav-" + tabId).classList.add("text-blue-500");
+      }
 
-        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
-          <div class="space-y-1">
-            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Workout Profile Blueprint</h3>
-            <canvas id="canvas-profile" width="800" height="180" class="w-full bg-slate-900 rounded-lg border border-slate-950"></canvas>
-          </div>
-          <div class="space-y-1">
-            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Rolling Execution History Trace (3 min)</h3>
-            <canvas id="canvas-trace" width="800" height="120" class="w-full bg-slate-900 rounded-lg border border-slate-950"></canvas>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
+      const WORKOUT_PRESETS = [
+        {
+          id: "z1_rec",
+          name: "Z1 Recovery",
+          desc: "Easy spin",
+          blocks: [{ d: 1800, p: 45 }],
+        },
+        {
+          id: "z2_end",
+          name: "Z2 Endurance",
+          desc: "Aerobic base",
+          blocks: [{ d: 3600, p: 65 }],
+        },
+        {
+          id: "z2_lng",
+          name: "Z2 Endurance · Long",
+          desc: "90 min base",
+          blocks: [{ d: 5400, p: 65 }],
+        },
+        {
+          id: "z3_tmp",
+          name: "Tempo 3×10",
+          desc: "Z3 sustained",
+          blocks: [
+            { d: 600, p: 50 },
+            { d: 600, p: 85 },
+            { d: 300, p: 55 },
+            { d: 600, p: 85 },
+            { d: 300, p: 55 },
+            { d: 600, p: 85 },
+            { d: 600, p: 45 },
+          ],
+        },
+        {
+          id: "z4_ss",
+          name: "Sweet Spot 3×12",
+          desc: "90% FTP",
+          blocks: [
+            { d: 600, p: 50 },
+            { d: 720, p: 90 },
+            { d: 240, p: 55 },
+            { d: 720, p: 90 },
+            { d: 240, p: 55 },
+            { d: 720, p: 90 },
+            { d: 480, p: 45 },
+          ],
+        },
+        {
+          id: "z4_thr",
+          name: "Threshold 2×20",
+          desc: "97% FTP",
+          blocks: [
+            { d: 600, p: 50 },
+            { d: 1200, p: 97 },
+            { d: 480, p: 55 },
+            { d: 1200, p: 97 },
+            { d: 600, p: 45 },
+          ],
+        },
+        {
+          id: "z5_ou",
+          name: "Over/Unders 3×9",
+          desc: "105% / 90% FTP",
+          blocks: [
+            { d: 600, p: 50 },
+            { d: 120, p: 105 },
+            { d: 120, p: 90 },
+            { d: 120, p: 105 },
+            { d: 120, p: 90 },
+            { d: 60, p: 105 },
+            { d: 180, p: 55 },
+            { d: 120, p: 105 },
+            { d: 120, p: 90 },
+            { d: 120, p: 105 },
+            { d: 120, p: 90 },
+            { d: 60, p: 105 },
+            { d: 180, p: 55 },
+            { d: 120, p: 105 },
+            { d: 120, p: 90 },
+            { d: 120, p: 105 },
+            { d: 120, p: 90 },
+            { d: 60, p: 105 },
+            { d: 420, p: 45 },
+          ],
+        },
+        {
+          id: "z5_vo2",
+          name: "VO\u2082max 4×4",
+          desc: "118% FTP",
+          blocks: [
+            { d: 600, p: 50 },
+            { d: 240, p: 118 },
+            { d: 240, p: 50 },
+            { d: 240, p: 118 },
+            { d: 240, p: 50 },
+            { d: 240, p: 118 },
+            { d: 240, p: 50 },
+            { d: 240, p: 118 },
+            { d: 600, p: 45 },
+          ],
+        },
+        {
+          id: "z6_spr",
+          name: "Sprints 6×30s",
+          desc: "Neuromuscular",
+          blocks: [
+            { d: 600, p: 50 },
+            { d: 30, p: 250 },
+            { d: 270, p: 50 },
+            { d: 30, p: 250 },
+            { d: 270, p: 50 },
+            { d: 30, p: 250 },
+            { d: 270, p: 50 },
+            { d: 30, p: 250 },
+            { d: 270, p: 50 },
+            { d: 30, p: 250 },
+            { d: 270, p: 50 },
+            { d: 30, p: 250 },
+            { d: 600, p: 45 },
+          ],
+        },
+      ];
 
-  <script>
-    /**
-     * Application States and Constant Repositories
-     */
-    const WORKOUT_PRESETS = [
-      { id: 'z1_rec', name: 'Z1 Recovery', desc: 'Easy spin', blocks: [{ d: 1800, p: 45 }] },
-      { id: 'z2_end', name: 'Z2 Endurance', desc: 'Aerobic base', blocks: [{ d: 3600, p: 65 }] },
-      { id: 'z2_lng', name: 'Z2 Endurance · Long', desc: '90 min base', blocks: [{ d: 5400, p: 65 }] },
-      { id: 'z3_tmp', name: 'Tempo 3×10', desc: 'Z3 sustained', blocks: [
-          { d: 600, p: 50 }, { d: 600, p: 85 }, { d: 300, p: 55 },
-          { d: 600, p: 85 }, { d: 300, p: 55 }, { d: 600, p: 85 }, { d: 600, p: 45 }
-        ]},
-      { id: 'z4_ss', name: 'Sweet Spot 3×12', desc: '90% FTP', blocks: [
-          { d: 600, p: 50 }, { d: 720, p: 90 }, { d: 240, p: 55 },
-          { d: 720, p: 90 }, { d: 240, p: 55 }, { d: 720, p: 90 }, { d: 480, p: 45 }
-        ]},
-      { id: 'z4_thr', name: 'Threshold 2×20', desc: '97% FTP', blocks: [
-          { d: 600, p: 50 }, { d: 1200, p: 97 }, { d: 480, p: 55 }, { d: 1200, p: 97 }, { d: 600, p: 45 }
-        ]},
-      { id: 'z5_ou', name: 'Over/Unders 3×9', desc: '105% / 90% FTP', blocks: [
-          { d: 600, p: 50 },
-          { d: 120, p: 105 }, { d: 120, p: 90 }, { d: 120, p: 105 }, { d: 120, p: 90 }, { d: 60, p: 105 }, { d: 180, p: 55 },
-          { d: 120, p: 105 }, { d: 120, p: 90 }, { d: 120, p: 105 }, { d: 120, p: 90 }, { d: 60, p: 105 }, { d: 180, p: 55 },
-          { d: 120, p: 105 }, { d: 120, p: 90 }, { d: 120, p: 105 }, { d: 120, p: 90 }, { d: 60, p: 105 }, { d: 420, p: 45 }
-        ]},
-      { id: 'z5_vo2', name: 'VO\u2082max 4×4', desc: '118% FTP', blocks: [
-          { d: 600, p: 50 },
-          { d: 240, p: 118 }, { d: 240, p: 50 }, { d: 240, p: 118 }, { d: 240, p: 50 },
-          { d: 240, p: 118 }, { d: 240, p: 50 }, { d: 240, p: 118 }, { d: 600, p: 45 }
-        ]},
-      { id: 'z6_spr', name: 'Sprints 6×30s', desc: 'Neuromuscular', blocks: [
-          { d: 600, p: 50 },
-          { d: 30, p: 250 }, { d: 270, p: 50 }, { d: 30, p: 250 }, { d: 270, p: 50 },
-          { d: 30, p: 250 }, { d: 270, p: 50 }, { d: 30, p: 250 }, { d: 270, p: 50 },
-          { d: 30, p: 250 }, { d: 270, p: 50 }, { d: 30, p: 250 }, { d: 600, p: 45 }
-        ]}
-    ];
+      const ACTION_REGISTRY = [
+        { id: "none", name: "None" },
+        { id: "skip", name: "Skip Section" },
+        { id: "restart", name: "Restart Section" },
+        { id: "plus30", name: "+30s on Section" },
+        { id: "minus30", name: "-30s on Section" },
+        { id: "bias_up", name: "Bias +2%" },
+        { id: "bias_down", name: "Bias -2%" },
+        { id: "bias_up_1", name: "Bias +1%" },
+        { id: "bias_down_1", name: "Bias -1%" },
+        { id: "grade_up", name: "Grade +0.5%" },
+        { id: "grade_down", name: "Grade -0.5%" },
+        { id: "toggle_mode", name: "Toggle ERG/SIM" },
+        { id: "set_erg", name: "Set ERG Mode" },
+        { id: "set_sim", name: "Set SIM Mode" },
+        { id: "play_pause", name: "Start/Pause" },
+      ];
 
-    const ACTION_REGISTRY = [
-      { id: 'none', name: 'None' },
-      { id: 'skip', name: 'Skip Section' },
-      { id: 'restart', name: 'Restart Section' },
-      { id: 'plus30', name: '+30s on Section' },
-      { id: 'minus30', name: '-30s on Section' },
-      { id: 'bias_up', name: 'Bias +2%' },
-      { id: 'bias_down', name: 'Bias -2%' },
-      { id: 'bias_up_1', name: 'Bias +1%' },
-      { id: 'bias_down_1', name: 'Bias -1%' },
-      { id: 'grade_up', name: 'Grade +0.5%' },
-      { id: 'grade_down', name: 'Grade -0.5%' },
-      { id: 'toggle_mode', name: 'Toggle ERG/SIM' },
-      { id: 'set_erg', name: 'Set ERG Mode' },
-      { id: 'set_sim', name: 'Set SIM Mode' },
-      { id: 'play_pause', name: 'Start/Pause' }
-    ];
+      let state = {
+        profiles: [{ id: "p1", name: "Rider 1", ftp: 250, bias: 100 }],
+        activeProfileId: "p1",
+        activeWorkout: JSON.parse(JSON.stringify(WORKOUT_PRESETS[1])),
+        workoutTimeline: [],
+        runState: "STOPPED",
+        clockTime: 0,
+        activeBlockIndex: 0,
+        blockTimeElapsed: 0,
+        mode: "ERG",
+        simGrade: 0.0,
+        telemetry: { power: 0, target: 0, cadence: 0, hr: 0 },
+        history: [],
+        trace: [],
+        buttonConfig: {
+          enabled: true,
+          bindings: [
+            { buttonId: "0001", action: "bias_up_1" },
+            { buttonId: "8000", action: "bias_down_1" },
+            { buttonId: "2000", action: "set_erg" },
+            { buttonId: "0008", action: "set_sim" },
+          ],
+          lastPayload: [],
+        },
+        ble: { trainer: null, hr: null, txChar: null, lastCommandTime: 0 },
+      };
 
-    let state = {
-      profiles: [{ id: 'p1', name: 'Rider 1', ftp: 250, bias: 100 }],
-      activeProfileId: 'p1',
-      activeWorkout: JSON.parse(JSON.stringify(WORKOUT_PRESETS[1])),
-      workoutTimeline: [], 
-      runState: 'STOPPED', 
-      clockTime: 0, 
-      activeBlockIndex: 0,
-      blockTimeElapsed: 0,
-      mode: 'ERG', 
-      simGrade: 0.0,
-      telemetry: { power: 0, target: 0, cadence: 0, hr: 0 },
-      history: [], 
-      trace: [], 
-      buttonConfig: {
-        enabled: true,
-        bindings: [
-          { buttonId: '0001', action: 'bias_up_1' },
-          { buttonId: '8000', action: 'bias_down_1' },
-          { buttonId: '2000', action: 'set_erg' },
-          { buttonId: '0008', action: 'set_sim' }
-        ],
-        lastPayload: []
-      },
-      ble: { trainer: null, hr: null, txChar: null, lastCommandTime: 0 }
-    };
+      /**
+       * Initialization & LocalStorage Pipelines
+       */
+      function init() {
+        loadStorage();
+        buildUIElements();
+        bindInputEvents();
+        processActiveWorkoutTimeline();
+        setInterval(tickLoop, 1000);
+        requestAnimationFrame(renderTelemetryLoop);
+      }
 
-    /**
-     * Initialization & LocalStorage Pipelines
-     */
-    function init() {
-      loadStorage();
-      buildUIElements();
-      bindInputEvents();
-      processActiveWorkoutTimeline();
-      setInterval(tickLoop, 1000);
-      requestAnimationFrame(renderTelemetryLoop);
-    }
+      function loadStorage() {
+        const p = localStorage.getItem("openwatt_profiles_v2");
+        if (p) state.profiles = JSON.parse(p);
+        const ap = localStorage.getItem("openwatt_active_profile_v2");
+        if (ap) state.activeProfileId = ap;
+        const bc = localStorage.getItem("openwatt_button_config_v3");
+        if (bc) state.buttonConfig = JSON.parse(bc);
 
-    function loadStorage() {
-      const p = localStorage.getItem('openwatt_profiles_v2');
-      if (p) state.profiles = JSON.parse(p);
-      const ap = localStorage.getItem('openwatt_active_profile_v2');
-      if (ap) state.activeProfileId = ap;
-      const bc = localStorage.getItem('openwatt_button_config_v3');
-      if (bc) state.buttonConfig = JSON.parse(bc);
-      
-      const active = getActiveProfile();
-      if (active) state.activeWorkout.bias = active.bias || 100;
-    }
+        const active = getActiveProfile();
+        if (active) state.activeWorkout.bias = active.bias || 100;
+      }
 
-    function saveStorage() {
-      localStorage.setItem('openwatt_profiles_v2', JSON.stringify(state.profiles));
-      localStorage.setItem('openwatt_active_profile_v2', state.activeProfileId);
-      localStorage.setItem('openwatt_button_config_v3', JSON.stringify(state.buttonConfig));
-    }
+      function saveStorage() {
+        localStorage.setItem(
+          "openwatt_profiles_v2",
+          JSON.stringify(state.profiles),
+        );
+        localStorage.setItem(
+          "openwatt_active_profile_v2",
+          state.activeProfileId,
+        );
+        localStorage.setItem(
+          "openwatt_button_config_v3",
+          JSON.stringify(state.buttonConfig),
+        );
+      }
 
-    function getActiveProfile() {
-      return state.profiles.find(x => x.id === state.activeProfileId) || state.profiles[0];
-    }
+      function getActiveProfile() {
+        return (
+          state.profiles.find((x) => x.id === state.activeProfileId) ||
+          state.profiles[0]
+        );
+      }
 
-    /**
-     * UI Builders
-     */
-    function buildUIElements() {
-      const chipContainer = document.getElementById('profile-chips');
-      chipContainer.innerHTML = '';
-      state.profiles.forEach(p => {
-        const isSelected = p.id === state.activeProfileId;
-        const chip = document.createElement('div');
-        chip.className = `flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-semibold cursor-pointer transition ${
-          isSelected ? 'bg-blue-600 border-blue-500 text-white shadow-md' : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
-        }`;
-        
-        const labelStr = document.createElement('span');
-        labelStr.innerText = `${p.name} (${p.ftp}W)`;
-        labelStr.addEventListener('click', () => selectProfile(p.id));
-        chip.appendChild(labelStr);
+      /**
+       * UI Builders
+       */
+      function buildUIElements() {
+        const chipContainer = document.getElementById("profile-chips");
+        chipContainer.innerHTML = "";
+        state.profiles.forEach((p) => {
+          const isSelected = p.id === state.activeProfileId;
+          const chip = document.createElement("div");
+          chip.className = `flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-semibold cursor-pointer transition ${
+            isSelected
+              ? "bg-blue-600 border-blue-500 text-white shadow-md"
+              : "bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600"
+          }`;
 
-        if (state.profiles.length > 1) {
-          const delBtn = document.createElement('span');
-          delBtn.innerHTML = '&times;';
-          delBtn.className = 'text-sm font-bold text-slate-400 hover:text-white pl-1 border-l border-slate-500/40 ml-1';
-          delBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            removeProfile(p.id);
+          const labelStr = document.createElement("span");
+          labelStr.innerText = `${p.name} (${p.ftp}W)`;
+          labelStr.addEventListener("click", () => selectProfile(p.id));
+          chip.appendChild(labelStr);
+
+          if (state.profiles.length > 1) {
+            const delBtn = document.createElement("span");
+            delBtn.innerHTML = "&times;";
+            delBtn.className =
+              "text-sm font-bold text-slate-400 hover:text-white pl-1 border-l border-slate-500/40 ml-1";
+            delBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              removeProfile(p.id);
+            });
+            chip.appendChild(delBtn);
+          }
+          chipContainer.appendChild(chip);
+        });
+
+        const selectWk = document.getElementById("select-workout");
+        selectWk.innerHTML = "";
+        WORKOUT_PRESETS.forEach((w, idx) => {
+          const opt = document.createElement("option");
+          opt.value = idx;
+          opt.innerText = `${w.name} \u2022 ${w.desc}`;
+          selectWk.appendChild(opt);
+        });
+
+        const bindingsContainer = document.getElementById("button-bindings");
+        bindingsContainer.innerHTML = "";
+        state.buttonConfig.bindings.forEach((binding, index) => {
+          const row = document.createElement("div");
+          row.className =
+            "flex items-center gap-2 justify-between bg-slate-900 p-2 rounded border border-slate-700";
+
+          let btnOpts = "";
+          Object.entries(WAHOO_BUTTON_MAP).forEach(([prefix, name]) => {
+            btnOpts += `<option value="${prefix}" ${binding.buttonId === prefix ? "selected" : ""}>${name}</option>`;
           });
-          chip.appendChild(delBtn);
-        }
-        chipContainer.appendChild(chip);
-      });
 
-      const selectWk = document.getElementById('select-workout');
-      selectWk.innerHTML = '';
-      WORKOUT_PRESETS.forEach((w, idx) => {
-        const opt = document.createElement('option');
-        opt.value = idx;
-        opt.innerText = `${w.name} \u2022 ${w.desc}`;
-        selectWk.appendChild(opt);
-      });
+          let actOpts = "";
+          ACTION_REGISTRY.forEach((act) => {
+            actOpts += `<option value="${act.id}" ${binding.action === act.id ? "selected" : ""}>${act.name}</option>`;
+          });
 
-      const bindingsContainer = document.getElementById('button-bindings');
-      bindingsContainer.innerHTML = '';
-      state.buttonConfig.bindings.forEach((binding, index) => {
-        const row = document.createElement('div');
-        row.className = 'flex items-center gap-2 justify-between bg-slate-900 p-2 rounded border border-slate-700';
-        
-        let btnOpts = '';
-        Object.entries(WAHOO_BUTTON_MAP).forEach(([prefix, name]) => {
-          btnOpts += `<option value="${prefix}" ${binding.buttonId===prefix?'selected':''}>${name}</option>`;
-        });
-        
-        let actOpts = '';
-        ACTION_REGISTRY.forEach(act => {
-          actOpts += `<option value="${act.id}" ${binding.action===act.id?'selected':''}>${act.name}</option>`;
-        });
-
-        row.innerHTML = `
+          row.innerHTML = `
           <select class="bind-btn bg-slate-800 border border-slate-600 rounded p-1 text-[10px] text-slate-200 flex-1" data-idx="${index}">${btnOpts}</select>
           <span class="text-slate-500 font-bold">→</span>
           <select class="bind-action bg-slate-800 border border-slate-600 rounded p-1 text-[10px] text-slate-200 flex-1" data-idx="${index}">${actOpts}</select>
           <button class="bind-delete text-red-500 hover:text-red-400 font-bold px-2" data-idx="${index}">✕</button>
         `;
-        bindingsContainer.appendChild(row);
-      });
-
-      document.querySelectorAll('.bind-btn').forEach(el => el.addEventListener('change', e => updateBinding(e, 'buttonId')));
-      document.querySelectorAll('.bind-action').forEach(el => el.addEventListener('change', e => updateBinding(e, 'action')));
-      document.querySelectorAll('.bind-delete').forEach(el => el.addEventListener('click', e => deleteBinding(e)));
-
-      document.getElementById('chk-buttons-enable').checked = state.buttonConfig.enabled;
-      document.getElementById('slider-bias').value = getActiveProfile().bias || 100;
-      document.getElementById('label-bias').innerText = `${getActiveProfile().bias || 100}%`;
-    }
-
-    function updateBinding(e, field) {
-      const idx = parseInt(e.target.getAttribute('data-idx'), 10);
-      const val = e.target.value;
-      state.buttonConfig.bindings[idx][field] = val;
-      saveStorage();
-    }
-    
-    function deleteBinding(e) {
-      const idx = parseInt(e.target.getAttribute('data-idx'), 10);
-      state.buttonConfig.bindings.splice(idx, 1);
-      saveStorage();
-      buildUIElements();
-    }
-
-    /**
-     * Analytical Target Computations
-     */
-    function processActiveWorkoutTimeline() {
-      let timeline = [];
-      state.activeWorkout.blocks.forEach(b => {
-        for(let s = 0; s < b.d; s++) {
-          timeline.push({ pctFtp: b.p });
-        }
-      });
-      state.workoutTimeline = timeline;
-    }
-
-    function calculateZone(powerVal) {
-      const ftp = getActiveProfile().ftp;
-      const ratio = powerVal / ftp;
-      if (ratio < 0.55) return { id: 'z1', name: 'Z1 Active Recovery', color: '#94a3b8' };
-      if (ratio < 0.75) return { id: 'z2', name: 'Z2 Endurance', color: '#22c55e' };
-      if (ratio < 0.90) return { id: 'z3', name: 'Z3 Tempo', color: '#3b82f6' };
-      if (ratio < 1.05) return { id: 'z4', name: 'Z4 Threshold', color: '#eab308' };
-      if (ratio < 1.21) return { id: 'z5', name: 'Z5 VO2 Max', color: '#f97316' };
-      if (ratio < 1.51) return { id: 'z6', name: 'Z6 Anaerobic Capacity', color: '#ef4444' };
-      return { id: 'z7', name: 'Z7 Neuromuscular Power', color: '#c084fc' };
-    }
-
-    function formatHHMMSS(seconds) {
-      if (seconds < 0) seconds = 0;
-      const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
-      const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
-      const s = Math.floor(seconds % 60).toString().padStart(2, '0');
-      return `${h}:${m}:${s}`;
-    }
-
-    /**
-     * Component Mutators
-     */
-    function selectProfile(id) {
-      state.activeProfileId = id;
-      const active = getActiveProfile();
-      document.getElementById('slider-bias').value = active.bias || 100;
-      buildUIElements();
-      renderStaticProfiles();
-    }
-
-    function addProfile() {
-      const name = prompt("Enter profile name:");
-      if (!name) return;
-      const ftp = parseInt(prompt("Enter FTP (Watts):"), 10);
-      if (!ftp || isNaN(ftp)) return;
-      
-      const newId = 'prof_' + Math.random().toString(36).substr(2, 9);
-      state.profiles.push({ id: newId, name: name, ftp: ftp, bias: 100 });
-      state.activeProfileId = newId;
-      saveStorage();
-      buildUIElements();
-    }
-
-    function removeProfile(id) {
-      if (state.profiles.length <= 1) return;
-      state.profiles = state.profiles.filter(p => p.id !== id);
-      if (state.activeProfileId === id) state.activeProfileId = state.profiles[0].id;
-      saveStorage();
-      buildUIElements();
-    }
-
-    function mutateSection(action) {
-      let blocks = state.activeWorkout.blocks;
-      if (blocks.length === 0 || !blocks[state.activeBlockIndex]) return;
-      
-      if (action === 'RESTART') {
-        state.clockTime -= state.blockTimeElapsed;
-        state.blockTimeElapsed = 0;
-      } else if (action === 'SKIP') {
-        const currentBlockDuration = blocks[state.activeBlockIndex].d;
-        const remainingInBlock = currentBlockDuration - state.blockTimeElapsed;
-        state.clockTime += remainingInBlock;
-        state.blockTimeElapsed = 0;
-        state.activeBlockIndex++;
-        if (state.activeBlockIndex >= blocks.length) { terminateWorkoutRun(); return; }
-      } else if (action === 'PLUS_30') {
-        blocks[state.activeBlockIndex].d += 30;
-      } else if (action === 'MINUS_30') {
-        if (blocks[state.activeBlockIndex].d > 30) {
-          blocks[state.activeBlockIndex].d = Math.max(30, blocks[state.activeBlockIndex].d - 30);
-        }
-      }
-      processActiveWorkoutTimeline();
-    }
-
-    /**
-     * Web Bluetooth GATT Integration Engine
-     */
-    async function connectTrainerGATT() {
-      try {
-        // Request FTMS ($0x1826) alongside Wahoo's Proprietary Shift Feature Block Service
-        const device = await navigator.bluetooth.requestDevice({
-          filters: [{ services: [0x1826] }],
-          optionalServices: [
-            'a026ee0d-0a7d-4ab3-97fa-f1500f9feb8b',
-            'a026ee01-0a7d-4ab3-97fa-f1500f9feb8b', 
-            'a026ee0b-0a7d-4ab3-97fa-f1500f9feb8b',
-            0x1818 // standard cycling power
-          ]
+          bindingsContainer.appendChild(row);
         });
-        
-        document.getElementById('status-trainer').innerText = "Connecting to device server...";
-        const server = await device.gatt.connect();
-        state.ble.trainer = server;
 
-        logEvent(`Connected to: ${device.name}`);
-        
-        // Discover services to help debugging
-        try {
-          const services = await server.getPrimaryServices();
-          const svcList = services.map(s => s.uuid.split('-')[0]).join(', ');
-          logEvent(`Discovered Services: ${svcList}`);
-        } catch(e) { console.warn("Service enumeration failed", e); }
-        
-        const ftms = await server.getPrimaryService(0x1826);
-        const dataChar = await ftms.getCharacteristic(0x2AD2);
-        await dataChar.startNotifications();
-        dataChar.addEventListener('characteristicvaluechanged', handleTrainerDataPayload);
-        
-        state.ble.txChar = await ftms.getCharacteristic(0x2AD9);
-        await state.ble.txChar.startNotifications();
+        document
+          .querySelectorAll(".bind-btn")
+          .forEach((el) =>
+            el.addEventListener("change", (e) => updateBinding(e, "buttonId")),
+          );
+        document
+          .querySelectorAll(".bind-action")
+          .forEach((el) =>
+            el.addEventListener("change", (e) => updateBinding(e, "action")),
+          );
+        document
+          .querySelectorAll(".bind-delete")
+          .forEach((el) =>
+            el.addEventListener("click", (e) => deleteBinding(e)),
+          );
 
-        // Request structural control authorization sequence
-        await sendControlOpcode(new Uint8Array([0x00])); 
-        await sendControlOpcode(new Uint8Array([0x07]));
-
-        document.getElementById('status-trainer').innerText = `Connected: ${device.name}`;
-        
-        // Dynamically subscribe to all characteristics in Wahoo custom services
-        const wahooServiceUUIDs = [
-          'a026ee0d-0a7d-4ab3-97fa-f1500f9feb8b',
-          'a026ee01-0a7d-4ab3-97fa-f1500f9feb8b', 
-          'a026ee0b-0a7d-4ab3-97fa-f1500f9feb8b'
-        ];
-        let subscribedAny = false;
-        
-        for (const svcUuid of wahooServiceUUIDs) {
-          try {
-            const wahooSvc = await server.getPrimaryService(svcUuid);
-            const characteristics = await wahooSvc.getCharacteristics();
-            for (const char of characteristics) {
-              if (char.properties.notify || char.properties.indicate) {
-                await char.startNotifications();
-                char.addEventListener('characteristicvaluechanged', handleWahooButtonPayload);
-                subscribedAny = true;
-                if (!state.ble.wahooChars) state.ble.wahooChars = [];
-                state.ble.wahooChars.push(char);
-                console.log(`Subscribed to Wahoo characteristic: ${char.uuid}`);
-              }
-            }
-          } catch(err) {
-            console.warn(`Could not bind to Wahoo service ${svcUuid}`, err);
-          }
-        }
-        
-        if (subscribedAny) {
-          logEvent("Wahoo proprietary streams successfully connected.");
-        } else {
-          logEvent("Error: No notifying Wahoo characteristics found on this hardware variant.");
-        }
-      } catch (e) {
-        document.getElementById('status-trainer').innerText = `GATT Fault: ${e.message}`;
+        document.getElementById("chk-buttons-enable").checked =
+          state.buttonConfig.enabled;
+        document.getElementById("slider-bias").value =
+          getActiveProfile().bias || 100;
+        document.getElementById("label-bias").innerText =
+          `${getActiveProfile().bias || 100}%`;
       }
-    }
 
-    async function connectHeartRateGATT() {
-      try {
-        const device = await navigator.bluetooth.requestDevice({ filters: [{ services: [0x180D] }] });
-        document.getElementById('status-hr').innerText = "Connecting to HR sensor...";
-        const server = await device.gatt.connect();
-        state.ble.hr = server;
-        
-        const svc = await server.getPrimaryService(0x180D);
-        const char = await svc.getCharacteristic(0x2A37);
-        await char.startNotifications();
-        char.addEventListener('characteristicvaluechanged', (e) => {
-          const val = e.target.value;
-          let hrValue = 0;
-          const flags = val.getUint8(0);
-          if ((flags & 1) === 0) hrValue = val.getUint8(1);
-          else hrValue = val.getUint16(1, true);
-          state.telemetry.hr = hrValue;
+      function updateBinding(e, field) {
+        const idx = parseInt(e.target.getAttribute("data-idx"), 10);
+        const val = e.target.value;
+        state.buttonConfig.bindings[idx][field] = val;
+        saveStorage();
+      }
+
+      function deleteBinding(e) {
+        const idx = parseInt(e.target.getAttribute("data-idx"), 10);
+        state.buttonConfig.bindings.splice(idx, 1);
+        saveStorage();
+        buildUIElements();
+      }
+
+      /**
+       * Analytical Target Computations
+       */
+      function processActiveWorkoutTimeline() {
+        let timeline = [];
+        state.activeWorkout.blocks.forEach((b) => {
+          for (let s = 0; s < b.d; s++) {
+            timeline.push({ pctFtp: b.p });
+          }
         });
-        document.getElementById('status-hr').innerText = `Connected HR: ${device.name}`;
-      } catch (e) {
-        document.getElementById('status-hr').innerText = `HR GATT Fault: ${e.message}`;
+        state.workoutTimeline = timeline;
       }
-    }
 
-    async function sendControlOpcode(payloadArray) {
-      if (!state.ble.txChar) return;
-      const now = performance.now();
-      if (now - state.ble.lastCommandTime < 250) {
-        await new Promise(r => setTimeout(r, 250 - (now - state.ble.lastCommandTime)));
+      function calculateZone(powerVal) {
+        const ftp = getActiveProfile().ftp;
+        const ratio = powerVal / ftp;
+        if (ratio < 0.55)
+          return { id: "z1", name: "Z1 Active Recovery", color: "#94a3b8" };
+        if (ratio < 0.75)
+          return { id: "z2", name: "Z2 Endurance", color: "#22c55e" };
+        if (ratio < 0.9)
+          return { id: "z3", name: "Z3 Tempo", color: "#3b82f6" };
+        if (ratio < 1.05)
+          return { id: "z4", name: "Z4 Threshold", color: "#eab308" };
+        if (ratio < 1.21)
+          return { id: "z5", name: "Z5 VO2 Max", color: "#f97316" };
+        if (ratio < 1.51)
+          return { id: "z6", name: "Z6 Anaerobic Capacity", color: "#ef4444" };
+        return { id: "z7", name: "Z7 Neuromuscular Power", color: "#c084fc" };
       }
-      try {
-        await state.ble.txChar.writeValueWithResponse(payloadArray);
-        state.ble.lastCommandTime = performance.now();
-      } catch(e) { console.error("Opcode Write Error:", e); }
-    }
 
-    function handleTrainerDataPayload(e) {
-      const val = e.target.value;
-      const flags = val.getUint16(0, true);
-      let offset = 2;
-      
-      if ((flags & (1 << 0)) === 0) { offset += 2; } // Speed
-      if (flags & (1 << 1)) { offset += 2; } // Avg Speed
-      if (flags & (1 << 2)) {
-        state.telemetry.cadence = val.getUint16(offset, true) * 0.5;
-        offset += 2;
+      function formatHHMMSS(seconds) {
+        if (seconds < 0) seconds = 0;
+        const h = Math.floor(seconds / 3600)
+          .toString()
+          .padStart(2, "0");
+        const m = Math.floor((seconds % 3600) / 60)
+          .toString()
+          .padStart(2, "0");
+        const s = Math.floor(seconds % 60)
+          .toString()
+          .padStart(2, "0");
+        return `${h}:${m}:${s}`;
       }
-      if (flags & (1 << 3)) { offset += 2; }
-      if (flags & (1 << 4)) { offset += 3; }
-      if (flags & (1 << 5)) { offset += 2; }
-      if (flags & (1 << 6)) {
-        state.telemetry.power = val.getInt16(offset, true);
-        offset += 2;
+
+      /**
+       * Component Mutators
+       */
+      function selectProfile(id) {
+        state.activeProfileId = id;
+        const active = getActiveProfile();
+        document.getElementById("slider-bias").value = active.bias || 100;
+        buildUIElements();
+        renderStaticProfiles();
       }
-    }
 
-    /**
-     * Wahoo Shifting & Button Event Interception Engine
-     */
-    const WAHOO_BUTTON_MAP = {
-      '0001': 'Right Hood: Up',
-      '8000': 'Right Hood: Down',
-      '0008': 'Right Hood: Inside',
-      '0200': 'Left Hood: Up',
-      '0400': 'Left Hood: Down',
-      '2000': 'Left Hood: Inside',
-      '0004': 'Right Shifter: Up',
-      '0002': 'Right Shifter: Down',
-      '1000': 'Left Shifter: Up',
-      '0800': 'Left Shifter: Down',
-      '4000': 'Right Brake',
-      '0100': 'Left Brake'
-    };
+      function addProfile() {
+        const name = prompt("Enter profile name:");
+        if (!name) return;
+        const ftp = parseInt(prompt("Enter FTP (Watts):"), 10);
+        if (!ftp || isNaN(ftp)) return;
 
-    function handleWahooButtonPayload(e) {
-      const val = e.target.value;
-      let bytes = [];
-      for(let i=0; i<val.byteLength; i++) bytes.push(val.getUint8(i));
-      
-      const hexStr = bytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
-      const binStr = bytes.map(b => b.toString(2).padStart(8, '0')).join(' ');
-      document.getElementById('raw-byte-stream').innerText = hexStr;
-      document.getElementById('raw-binary-stream').innerText = binStr;
-      
-      if (bytes.length === 3) {
-        const prefix = bytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).slice(0, 2).join('');
-        const buttonName = WAHOO_BUTTON_MAP[prefix] || `Unknown (${prefix})`;
-        const isPressed = (bytes[2] & 0x80) !== 0;
-        
-        if (isPressed) {
-          logEvent(`PRESSED: ${buttonName}`);
-          if (state.buttonConfig.enabled) {
-            const binding = state.buttonConfig.bindings.find(b => b.buttonId === prefix);
-            if (binding && binding.action !== 'none') {
-              executeBoundAction(binding.action);
-            }
+        const newId = "prof_" + Math.random().toString(36).substr(2, 9);
+        state.profiles.push({ id: newId, name: name, ftp: ftp, bias: 100 });
+        state.activeProfileId = newId;
+        saveStorage();
+        buildUIElements();
+      }
+
+      function removeProfile(id) {
+        if (state.profiles.length <= 1) return;
+        state.profiles = state.profiles.filter((p) => p.id !== id);
+        if (state.activeProfileId === id)
+          state.activeProfileId = state.profiles[0].id;
+        saveStorage();
+        buildUIElements();
+      }
+
+      function mutateSection(action) {
+        let blocks = state.activeWorkout.blocks;
+        if (blocks.length === 0 || !blocks[state.activeBlockIndex]) return;
+
+        if (action === "RESTART") {
+          state.clockTime -= state.blockTimeElapsed;
+          state.blockTimeElapsed = 0;
+        } else if (action === "SKIP") {
+          const currentBlockDuration = blocks[state.activeBlockIndex].d;
+          const remainingInBlock =
+            currentBlockDuration - state.blockTimeElapsed;
+          state.clockTime += remainingInBlock;
+          state.blockTimeElapsed = 0;
+          state.activeBlockIndex++;
+          if (state.activeBlockIndex >= blocks.length) {
+            terminateWorkoutRun();
+            return;
           }
-        } else {
-          logEvent(`RELEASED: ${buttonName}`);
-        }
-      }
-    }
-
-    function logEvent(msg) {
-      const logContainer = document.getElementById('event-log');
-      const entry = document.createElement('div');
-      entry.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
-      entry.className = 'text-emerald-400 border-b border-slate-800 pb-1 mb-1';
-      logContainer.prepend(entry);
-      if (logContainer.children.length > 20) {
-        logContainer.removeChild(logContainer.lastChild);
-      }
-    }
-
-    function executeBoundAction(actionId) {
-      if (actionId === 'none') return;
-      if (actionId === 'skip') mutateSection('SKIP');
-      if (actionId === 'restart') mutateSection('RESTART');
-      if (actionId === 'plus30') mutateSection('PLUS_30');
-      if (actionId === 'minus30') mutateSection('MINUS_30');
-      if (actionId === 'play_pause') toggleEngineExecution();
-      if (actionId === 'toggle_mode') {
-        setExecutionMode(state.mode === 'ERG' ? 'SIM' : 'ERG');
-      }
-      if (actionId === 'set_erg') setExecutionMode('ERG');
-      if (actionId === 'set_sim') setExecutionMode('SIM');
-      if (actionId.startsWith('bias_')) {
-        let diff = 0;
-        if (actionId === 'bias_up') diff = 2;
-        if (actionId === 'bias_down') diff = -2;
-        if (actionId === 'bias_up_1') diff = 1;
-        if (actionId === 'bias_down_1') diff = -1;
-        const slider = document.getElementById('slider-bias');
-        slider.value = Math.min(150, Math.max(50, parseInt(slider.value, 10) + diff));
-        slider.dispatchEvent(new Event('input'));
-      }
-      if (actionId === 'grade_up' || actionId === 'grade_down') {
-        const diff = actionId === 'grade_up' ? 0.5 : -0.5;
-        const slider = document.getElementById('slider-grade');
-        slider.value = Math.min(20, Math.max(-10, parseFloat(slider.value) + diff));
-        slider.dispatchEvent(new Event('input'));
-      }
-    }
-
-    function setExecutionMode(targetMode) {
-      state.mode = targetMode;
-      const mErg = document.getElementById('mode-erg');
-      const mSim = document.getElementById('mode-sim');
-      const simCtrl = document.getElementById('sim-controls');
-      
-      if (targetMode === 'ERG') {
-        mErg.className = "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition bg-blue-600 text-white";
-        mSim.className = "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition text-slate-400";
-        simCtrl.classList.add('hidden');
-      } else {
-        mSim.className = "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition bg-blue-600 text-white";
-        mErg.className = "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition text-slate-400";
-        simCtrl.classList.remove('hidden');
-        assertHardwareSimulationParameters();
-      }
-    }
-
-    async function assertHardwareSimulationParameters() {
-      if (state.mode !== 'SIM' || !state.ble.txChar) return;
-      const scaledGrade = Math.round(state.simGrade * 100);
-      const payload = new Uint8Array(7);
-      payload[0] = 0x11; // Opcode: Set Indoor Bike Simulation Parameters
-      payload[1] = 0x00; // Wind Speed
-      payload[2] = 0x00;
-      payload[3] = scaledGrade & 0xFF; 
-      payload[4] = (scaledGrade >> 8) & 0xFF;
-      payload[5] = 0x04; // Default rolling resistance coefficient
-      payload[6] = 0x00;
-      await sendControlOpcode(payload);
-    }
-
-    /**
-     * File Processing Core Engines (.zwo, .erg, .mrc)
-     */
-    function parseWorkoutFileContent(fileName, textData) {
-      try {
-        let loadedWorkout = { id: 'imported', name: fileName.split('.')[0], desc: 'Imported File Target', blocks: [] };
-        
-        if (fileName.endsWith('.zwo')) {
-          const doc = new DOMParser().parseFromString(textData, "application/xml");
-          const workoutNode = doc.querySelector('workout');
-          if (!workoutNode) throw new Error("Invalid ZWO layout container structure.");
-          
-          for(let node of workoutNode.children) {
-            const tag = node.tagName.toLowerCase();
-            const d = parseInt(node.getAttribute('Duration'), 10);
-            if(tag === 'steadystate') {
-              loadedWorkout.blocks.push({ d: d, p: Math.round(parseFloat(node.getAttribute('Power')) * 100) });
-            } else if(tag === 'intervalsrepeat') {
-              const repeatCount = parseInt(node.getAttribute('Repeat'), 10);
-              const d1 = parseInt(node.getAttribute('OnDuration'), 10);
-              const p1 = Math.round(parseFloat(node.getAttribute('OnPower')) * 100);
-              const d2 = parseInt(node.getAttribute('OffDuration'), 10);
-              const p2 = Math.round(parseFloat(node.getAttribute('OffPower')) * 100);
-              for(let r=0; r<repeatCount; r++) {
-                loadedWorkout.blocks.push({ d: d1, p: p1 });
-                loadedWorkout.blocks.push({ d: d2, p: p2 });
-              }
-            } else if(tag === 'warmup' || tag === 'cooldown') {
-              loadedWorkout.blocks.push({ d: d, p: Math.round(parseFloat(node.getAttribute('PowerLow')) * 100) });
-            }
-          }
-        } else if (fileName.endsWith('.erg') || fileName.endsWith('.mrc')) {
-          const lines = textData.split('\n');
-          let courseDataMode = false;
-          const isMrc = fileName.endsWith('.mrc');
-          let lastTime = 0;
-
-          for(let line of lines) {
-            const clean = line.trim();
-            if(!clean || clean.startsWith('#')) continue;
-            if(clean.toUpperCase().startsWith('[COURSE DATA]')) { courseDataMode = true; continue; }
-            if(courseDataMode) {
-              const tokens = clean.split(/\s+/);
-              if(tokens.length >= 2) {
-                const curTimeSecs = Math.round(parseFloat(tokens[0]) * 60);
-                const valueVal = parseFloat(tokens[1]); 
-                const blockDuration = curTimeSecs - lastTime;
-                
-                if (blockDuration > 0) {
-                  const percentageCalculated = isMrc ? valueVal : Math.round((valueVal / 250) * 100);
-                  loadedWorkout.blocks.push({ d: blockDuration, p: percentageCalculated });
-                }
-                lastTime = curTimeSecs;
-              }
-            }
+        } else if (action === "PLUS_30") {
+          blocks[state.activeBlockIndex].d += 30;
+        } else if (action === "MINUS_30") {
+          if (blocks[state.activeBlockIndex].d > 30) {
+            blocks[state.activeBlockIndex].d = Math.max(
+              30,
+              blocks[state.activeBlockIndex].d - 30,
+            );
           }
         }
-
-        if(loadedWorkout.blocks.length === 0) throw new Error("No usable workout segments mapped from file.");
-        
-        state.activeWorkout = loadedWorkout;
-        state.clockTime = 0; state.activeBlockIndex = 0; state.blockTimeElapsed = 0;
         processActiveWorkoutTimeline();
-      } catch (err) {
-        alert("File Parsing Failed: " + err.message);
       }
-    }
 
-    /**
-     * Core Clock Runtime Tick Loop (1Hz Engine)
-     */
-    function tickLoop() {
-      if (state.runState !== 'RUNNING') return;
+      /**
+       * Web Bluetooth GATT Integration Engine
+       */
+      async function connectTrainerGATT() {
+        try {
+          // Request FTMS ($0x1826) alongside Wahoo's Proprietary Shift Feature Block Service
+          const device = await navigator.bluetooth.requestDevice({
+            filters: [{ services: [0x1826] }],
+            optionalServices: [
+              "a026ee0d-0a7d-4ab3-97fa-f1500f9feb8b",
+              "a026ee01-0a7d-4ab3-97fa-f1500f9feb8b",
+              "a026ee0b-0a7d-4ab3-97fa-f1500f9feb8b",
+              0x1818, // standard cycling power
+            ],
+          });
 
-      state.clockTime++;
-      state.blockTimeElapsed++;
+          document.getElementById("status-trainer").innerText =
+            "Connecting to device server...";
+          const server = await device.gatt.connect();
+          state.ble.trainer = server;
 
-      let accumulatedTime = 0;
-      let matchFound = false;
-      for (let i = 0; i < state.activeWorkout.blocks.length; i++) {
-        accumulatedTime += state.activeWorkout.blocks[i].d;
-        if (state.clockTime <= accumulatedTime) {
-          if (state.activeBlockIndex !== i) {
-            state.activeBlockIndex = i;
-            state.blockTimeElapsed = state.clockTime - (accumulatedTime - state.activeWorkout.blocks[i].d);
+          logEvent(`Connected to: ${device.name}`);
+
+          // Discover services to help debugging
+          try {
+            const services = await server.getPrimaryServices();
+            const svcList = services
+              .map((s) => s.uuid.split("-")[0])
+              .join(", ");
+            logEvent(`Discovered Services: ${svcList}`);
+          } catch (e) {
+            console.warn("Service enumeration failed", e);
           }
-          matchFound = true;
-          break;
+
+          const ftms = await server.getPrimaryService(0x1826);
+          const dataChar = await ftms.getCharacteristic(0x2ad2);
+          await dataChar.startNotifications();
+          dataChar.addEventListener(
+            "characteristicvaluechanged",
+            handleTrainerDataPayload,
+          );
+
+          state.ble.txChar = await ftms.getCharacteristic(0x2ad9);
+          await state.ble.txChar.startNotifications();
+
+          // Request structural control authorization sequence
+          await sendControlOpcode(new Uint8Array([0x00]));
+          await sendControlOpcode(new Uint8Array([0x07]));
+
+          document.getElementById("status-trainer").innerText =
+            `Connected: ${device.name}`;
+
+          // Dynamically subscribe to all characteristics in Wahoo custom services
+          const wahooServiceUUIDs = [
+            "a026ee0d-0a7d-4ab3-97fa-f1500f9feb8b",
+            "a026ee01-0a7d-4ab3-97fa-f1500f9feb8b",
+            "a026ee0b-0a7d-4ab3-97fa-f1500f9feb8b",
+          ];
+          let subscribedAny = false;
+
+          for (const svcUuid of wahooServiceUUIDs) {
+            try {
+              const wahooSvc = await server.getPrimaryService(svcUuid);
+              const characteristics = await wahooSvc.getCharacteristics();
+              for (const char of characteristics) {
+                if (char.properties.notify || char.properties.indicate) {
+                  await char.startNotifications();
+                  char.addEventListener(
+                    "characteristicvaluechanged",
+                    handleWahooButtonPayload,
+                  );
+                  subscribedAny = true;
+                  if (!state.ble.wahooChars) state.ble.wahooChars = [];
+                  state.ble.wahooChars.push(char);
+                  console.log(
+                    `Subscribed to Wahoo characteristic: ${char.uuid}`,
+                  );
+                }
+              }
+            } catch (err) {
+              console.warn(`Could not bind to Wahoo service ${svcUuid}`, err);
+            }
+          }
+
+          if (subscribedAny) {
+            logEvent("Wahoo proprietary streams successfully connected.");
+          } else {
+            logEvent(
+              "Error: No notifying Wahoo characteristics found on this hardware variant.",
+            );
+          }
+        } catch (e) {
+          document.getElementById("status-trainer").innerText =
+            `GATT Fault: ${e.message}`;
         }
       }
 
-      if (!matchFound || state.clockTime >= state.workoutTimeline.length) {
-        terminateWorkoutRun();
-        return;
-      }
+      async function connectHeartRateGATT() {
+        try {
+          const device = await navigator.bluetooth.requestDevice({
+            filters: [{ services: [0x180d] }],
+          });
+          document.getElementById("status-hr").innerText =
+            "Connecting to HR sensor...";
+          const server = await device.gatt.connect();
+          state.ble.hr = server;
 
-      const activeProfile = getActiveProfile();
-      const currentRawTargetPct = state.workoutTimeline[state.clockTime].pctFtp;
-      const computedTargetWatts = Math.round(activeProfile.ftp * (currentRawTargetPct / 100) * (activeProfile.bias / 100));
-      
-      state.telemetry.target = computedTargetWatts;
-
-      // Hardware vs Simulation Pipeline
-      if (!state.ble.trainer) {
-        const noise = (Math.random() - 0.5) * 6;
-        state.telemetry.power = Math.round(Math.max(0, computedTargetWatts + noise));
-        state.telemetry.cadence = 88 + Math.round((Math.random() - 0.5) * 4);
-        state.telemetry.hr = 110 + Math.round((computedTargetWatts / activeProfile.ftp) * 50);
-      } else {
-        if (state.mode === 'ERG' && state.clockTime % 3 === 0) {
-          const p = new Uint8Array(3);
-          p[0] = 0x05; // Opcode: Set Target Power
-          p[1] = computedTargetWatts & 0xFF;
-          p[2] = (computedTargetWatts >> 8) & 0xFF;
-          sendControlOpcode(p);
+          const svc = await server.getPrimaryService(0x180d);
+          const char = await svc.getCharacteristic(0x2a37);
+          await char.startNotifications();
+          char.addEventListener("characteristicvaluechanged", (e) => {
+            const val = e.target.value;
+            let hrValue = 0;
+            const flags = val.getUint8(0);
+            if ((flags & 1) === 0) hrValue = val.getUint8(1);
+            else hrValue = val.getUint16(1, true);
+            state.telemetry.hr = hrValue;
+          });
+          document.getElementById("status-hr").innerText =
+            `Connected HR: ${device.name}`;
+        } catch (e) {
+          document.getElementById("status-hr").innerText =
+            `HR GATT Fault: ${e.message}`;
         }
       }
 
-      state.history.push({
-        t: state.clockTime,
-        p: state.telemetry.power,
-        tgt: state.telemetry.target,
-        cad: state.telemetry.cadence,
-        hr: state.telemetry.hr
-      });
-
-      state.trace.push({ p: state.telemetry.power, tgt: state.telemetry.target });
-      if (state.trace.length > 180) state.trace.shift();
-    }
-
-    function toggleEngineExecution() {
-      if (state.runState === 'STOPPED' || state.runState === 'PAUSED') {
-        state.runState = 'RUNNING';
-        document.getElementById('btn-engine-control').innerText = "Pause";
-        document.getElementById('btn-engine-control').className = "bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-lg text-xs tracking-widest transition uppercase shadow-lg";
-      } else {
-        state.runState = 'PAUSED';
-        document.getElementById('btn-engine-control').innerText = "Resume";
-        document.getElementById('btn-engine-control').className = "bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg text-xs tracking-widest transition uppercase shadow-lg";
-      }
-    }
-
-    function terminateWorkoutRun() {
-      state.runState = 'STOPPED';
-      document.getElementById('btn-engine-control').innerText = "Start";
-      document.getElementById('btn-engine-control').className = "bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg text-xs tracking-widest transition uppercase shadow-lg";
-      if (state.history.length > 5) executeDataTcxExportSequence();
-      state.clockTime = 0; state.activeBlockIndex = 0; state.blockTimeElapsed = 0;
-      state.history = []; state.trace = [];
-    }
-
-    /**
-     * DOM Rendering Pipeline
-     */
-    function renderTelemetryLoop() {
-      requestAnimationFrame(renderTelemetryLoop);
-      
-      const t = state.telemetry;
-      const zoneInfo = calculateZone(t.power);
-
-      document.getElementById('val-power').innerText = t.power;
-      document.getElementById('zone-power').innerText = zoneInfo.name;
-      document.getElementById('zone-power').style.backgroundColor = zoneInfo.color;
-      document.getElementById('indicator-power-strip').style.backgroundColor = zoneInfo.color;
-
-      document.getElementById('val-target').innerText = state.mode === 'ERG' ? t.target : `${state.simGrade.toFixed(1)}%`;
-      document.getElementById('val-target-sub').innerText = state.mode === 'ERG' ? 'ERG Mode Target Baseline' : 'SIM Mode Target Grade';
-      
-      const tgtZone = calculateZone(t.target);
-      document.getElementById('indicator-target-strip').style.backgroundColor = state.mode === 'ERG' ? tgtZone.color : '#059669';
-
-      document.getElementById('val-cadence').innerText = Math.round(t.cadence);
-      document.getElementById('val-hr').innerText = t.hr;
-
-      document.getElementById('time-elapsed').innerText = formatHHMMSS(state.clockTime);
-      document.getElementById('time-remaining').innerText = formatHHMMSS(state.workoutTimeline.length - state.clockTime);
-      
-      if (state.activeWorkout.blocks[state.activeBlockIndex]) {
-        const curBlockDuration = state.activeWorkout.blocks[state.activeBlockIndex].d;
-        document.getElementById('time-block').innerText = formatHHMMSS(curBlockDuration - state.blockTimeElapsed);
+      async function sendControlOpcode(payloadArray) {
+        if (!state.ble.txChar) return;
+        const now = performance.now();
+        if (now - state.ble.lastCommandTime < 250) {
+          await new Promise((r) =>
+            setTimeout(r, 250 - (now - state.ble.lastCommandTime)),
+          );
+        }
+        try {
+          await state.ble.txChar.writeValueWithResponse(payloadArray);
+          state.ble.lastCommandTime = performance.now();
+        } catch (e) {
+          console.error("Opcode Write Error:", e);
+        }
       }
 
-      renderHistoryTrace();
-    }
+      function handleTrainerDataPayload(e) {
+        const val = e.target.value;
+        const flags = val.getUint16(0, true);
+        let offset = 2;
 
-    /**
-     * Canvas Visualization Pipelines
-     */
-    function renderStaticProfiles() {
-      const canvas = document.getElementById('canvas-profile');
-      const ctx = canvas.getContext('2d');
-      const w = canvas.width; const h = canvas.height;
-      
-      ctx.clearRect(0,0,w,h);
-      if (state.workoutTimeline.length === 0) return;
-
-      const totalSecs = state.workoutTimeline.length;
-      const maxPct = Math.max(...state.workoutTimeline.map(x => x.pctFtp), 120);
-
-      state.activeWorkout.blocks.forEach((b, idx) => {
-        let blockStartSecs = 0;
-        for (let k=0; k<idx; k++) blockStartSecs += state.activeWorkout.blocks[k].d;
-        
-        const xStart = (blockStartSecs / totalSecs) * w;
-        const blockW = (b.d / totalSecs) * w;
-        const blockH = (b.p / maxPct) * (h - 20);
-        const yStart = h - blockH;
-
-        const mockPower = (b.p / 100) * getActiveProfile().ftp;
-        ctx.fillStyle = calculateZone(mockPower).color + "CC";
-        ctx.fillRect(xStart, yStart, blockW, blockH);
-        ctx.strokeStyle = "#1e293b";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(xStart, yStart, blockW, blockH);
-      });
-
-      if (state.clockTime > 0) {
-        const playheadX = (state.clockTime / totalSecs) * w;
-        ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(playheadX, 0); ctx.lineTo(playheadX, h); ctx.stroke();
+        if ((flags & (1 << 0)) === 0) {
+          offset += 2;
+        } // Speed
+        if (flags & (1 << 1)) {
+          offset += 2;
+        } // Avg Speed
+        if (flags & (1 << 2)) {
+          state.telemetry.cadence = val.getUint16(offset, true) * 0.5;
+          offset += 2;
+        }
+        if (flags & (1 << 3)) {
+          offset += 2;
+        }
+        if (flags & (1 << 4)) {
+          offset += 3;
+        }
+        if (flags & (1 << 5)) {
+          offset += 2;
+        }
+        if (flags & (1 << 6)) {
+          state.telemetry.power = val.getInt16(offset, true);
+          offset += 2;
+        }
       }
-    }
 
-    function renderHistoryTrace() {
-      const canvas = document.getElementById('canvas-trace');
-      const ctx = canvas.getContext('2d');
-      const w = canvas.width; const h = canvas.height;
+      /**
+       * Wahoo Shifting & Button Event Interception Engine
+       */
+      const WAHOO_BUTTON_MAP = {
+        "0001": "Right Hood: Up",
+        8000: "Right Hood: Down",
+        "0008": "Right Hood: Inside",
+        "0200": "Left Hood: Up",
+        "0400": "Left Hood: Down",
+        2000: "Left Hood: Inside",
+        "0004": "Right Shifter: Up",
+        "0002": "Right Shifter: Down",
+        1000: "Left Shifter: Up",
+        "0800": "Left Shifter: Down",
+        4000: "Right Brake",
+        "0100": "Left Brake",
+      };
 
-      ctx.clearRect(0,0,w,h);
-      if(state.trace.length === 0) return;
+      function handleWahooButtonPayload(e) {
+        const val = e.target.value;
+        let bytes = [];
+        for (let i = 0; i < val.byteLength; i++) bytes.push(val.getUint8(i));
 
-      const maxVal = 400; 
-      const step = w / 180;
+        const hexStr = bytes
+          .map((b) => b.toString(16).padStart(2, "0").toUpperCase())
+          .join(" ");
+        const binStr = bytes
+          .map((b) => b.toString(2).padStart(8, "0"))
+          .join(" ");
+        document.getElementById("raw-byte-stream").innerText = hexStr;
+        document.getElementById("raw-binary-stream").innerText = binStr;
 
-      // Render Target
-      ctx.strokeStyle = "rgba(234, 179, 8, 0.4)"; ctx.lineWidth = 2; ctx.beginPath();
-      state.trace.forEach((pt, i) => {
-        const x = i * step; const y = h - ((pt.tgt / maxVal) * h);
-        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-      });
-      ctx.stroke();
+        if (bytes.length === 3) {
+          const prefix = bytes
+            .map((b) => b.toString(16).padStart(2, "0").toUpperCase())
+            .slice(0, 2)
+            .join("");
+          const buttonName = WAHOO_BUTTON_MAP[prefix] || `Unknown (${prefix})`;
+          const isPressed = (bytes[2] & 0x80) !== 0;
 
-      // Render Actual Power Output Trace
-      ctx.strokeStyle = "#22c55e"; ctx.lineWidth = 2; ctx.beginPath();
-      state.trace.forEach((pt, i) => {
-        const x = i * step; const y = h - ((pt.p / maxVal) * h);
-        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-      });
-      ctx.stroke();
-    }
+          if (isPressed) {
+            logEvent(`PRESSED: ${buttonName}`);
+            if (state.buttonConfig.enabled) {
+              const binding = state.buttonConfig.bindings.find(
+                (b) => b.buttonId === prefix,
+              );
+              if (binding && binding.action !== "none") {
+                executeBoundAction(binding.action);
+              }
+            }
+          } else {
+            logEvent(`RELEASED: ${buttonName}`);
+          }
+        }
+      }
 
-    const originalProcessTimeline = processActiveWorkoutTimeline;
-    processActiveWorkoutTimeline = function() {
-      originalProcessTimeline();
-      renderStaticProfiles();
-    };
+      function logEvent(msg) {
+        const logContainer = document.getElementById("event-log");
+        const entry = document.createElement("div");
+        entry.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        entry.className =
+          "text-emerald-400 border-b border-slate-800 pb-1 mb-1";
+        logContainer.prepend(entry);
+        if (logContainer.children.length > 20) {
+          logContainer.removeChild(logContainer.lastChild);
+        }
+      }
 
-    /**
-     * XML Serialization System (.tcx Generator)
-     */
-    function executeDataTcxExportSequence() {
-      const active = getActiveProfile();
-      const isoTimestamp = new Date().toISOString();
-      const filenameStr = `openwatt-${Math.floor(Date.now()/1000)}.tcx`;
-      
-      let wattsSum = 0; let wattsMax = 0;
-      state.history.forEach(h => { wattsSum += h.p; if (h.p > wattsMax) wattsMax = h.p; });
-      const avgWatts = Math.round(wattsSum / state.history.length);
+      function executeBoundAction(actionId) {
+        if (actionId === "none") return;
+        if (actionId === "skip") mutateSection("SKIP");
+        if (actionId === "restart") mutateSection("RESTART");
+        if (actionId === "plus30") mutateSection("PLUS_30");
+        if (actionId === "minus30") mutateSection("MINUS_30");
+        if (actionId === "play_pause") toggleEngineExecution();
+        if (actionId === "toggle_mode") {
+          setExecutionMode(state.mode === "ERG" ? "SIM" : "ERG");
+        }
+        if (actionId === "set_erg") setExecutionMode("ERG");
+        if (actionId === "set_sim") setExecutionMode("SIM");
+        if (actionId.startsWith("bias_")) {
+          let diff = 0;
+          if (actionId === "bias_up") diff = 2;
+          if (actionId === "bias_down") diff = -2;
+          if (actionId === "bias_up_1") diff = 1;
+          if (actionId === "bias_down_1") diff = -1;
+          const slider = document.getElementById("slider-bias");
+          slider.value = Math.min(
+            150,
+            Math.max(50, parseInt(slider.value, 10) + diff),
+          );
+          slider.dispatchEvent(new Event("input"));
+        }
+        if (actionId === "grade_up" || actionId === "grade_down") {
+          const diff = actionId === "grade_up" ? 0.5 : -0.5;
+          const slider = document.getElementById("slider-grade");
+          slider.value = Math.min(
+            20,
+            Math.max(-10, parseFloat(slider.value) + diff),
+          );
+          slider.dispatchEvent(new Event("input"));
+        }
+      }
 
-      let tcx = `<?xml version="1.0" encoding="UTF-8"?>
+      function setExecutionMode(targetMode) {
+        state.mode = targetMode;
+        const mErg = document.getElementById("mode-erg");
+        const mSim = document.getElementById("mode-sim");
+        const simCtrl = document.getElementById("sim-controls");
+
+        if (targetMode === "ERG") {
+          mErg.className =
+            "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition bg-blue-600 text-white";
+          mSim.className =
+            "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition text-slate-400";
+          simCtrl.classList.add("hidden");
+        } else {
+          mSim.className =
+            "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition bg-blue-600 text-white";
+          mErg.className =
+            "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition text-slate-400";
+          simCtrl.classList.remove("hidden");
+          assertHardwareSimulationParameters();
+        }
+      }
+
+      async function assertHardwareSimulationParameters() {
+        if (state.mode !== "SIM" || !state.ble.txChar) return;
+        const scaledGrade = Math.round(state.simGrade * 100);
+        const payload = new Uint8Array(7);
+        payload[0] = 0x11; // Opcode: Set Indoor Bike Simulation Parameters
+        payload[1] = 0x00; // Wind Speed
+        payload[2] = 0x00;
+        payload[3] = scaledGrade & 0xff;
+        payload[4] = (scaledGrade >> 8) & 0xff;
+        payload[5] = 0x04; // Default rolling resistance coefficient
+        payload[6] = 0x00;
+        await sendControlOpcode(payload);
+      }
+
+      /**
+       * File Processing Core Engines (.zwo, .erg, .mrc)
+       */
+      function parseWorkoutFileContent(fileName, textData) {
+        try {
+          let loadedWorkout = {
+            id: "imported",
+            name: fileName.split(".")[0],
+            desc: "Imported File Target",
+            blocks: [],
+          };
+
+          if (fileName.endsWith(".zwo")) {
+            const doc = new DOMParser().parseFromString(
+              textData,
+              "application/xml",
+            );
+            const workoutNode = doc.querySelector("workout");
+            if (!workoutNode)
+              throw new Error("Invalid ZWO layout container structure.");
+
+            for (let node of workoutNode.children) {
+              const tag = node.tagName.toLowerCase();
+              const d = parseInt(node.getAttribute("Duration"), 10);
+              if (tag === "steadystate") {
+                loadedWorkout.blocks.push({
+                  d: d,
+                  p: Math.round(parseFloat(node.getAttribute("Power")) * 100),
+                });
+              } else if (tag === "intervalsrepeat") {
+                const repeatCount = parseInt(node.getAttribute("Repeat"), 10);
+                const d1 = parseInt(node.getAttribute("OnDuration"), 10);
+                const p1 = Math.round(
+                  parseFloat(node.getAttribute("OnPower")) * 100,
+                );
+                const d2 = parseInt(node.getAttribute("OffDuration"), 10);
+                const p2 = Math.round(
+                  parseFloat(node.getAttribute("OffPower")) * 100,
+                );
+                for (let r = 0; r < repeatCount; r++) {
+                  loadedWorkout.blocks.push({ d: d1, p: p1 });
+                  loadedWorkout.blocks.push({ d: d2, p: p2 });
+                }
+              } else if (tag === "warmup" || tag === "cooldown") {
+                loadedWorkout.blocks.push({
+                  d: d,
+                  p: Math.round(
+                    parseFloat(node.getAttribute("PowerLow")) * 100,
+                  ),
+                });
+              }
+            }
+          } else if (fileName.endsWith(".erg") || fileName.endsWith(".mrc")) {
+            const lines = textData.split("\n");
+            let courseDataMode = false;
+            const isMrc = fileName.endsWith(".mrc");
+            let lastTime = 0;
+
+            for (let line of lines) {
+              const clean = line.trim();
+              if (!clean || clean.startsWith("#")) continue;
+              if (clean.toUpperCase().startsWith("[COURSE DATA]")) {
+                courseDataMode = true;
+                continue;
+              }
+              if (courseDataMode) {
+                const tokens = clean.split(/\s+/);
+                if (tokens.length >= 2) {
+                  const curTimeSecs = Math.round(parseFloat(tokens[0]) * 60);
+                  const valueVal = parseFloat(tokens[1]);
+                  const blockDuration = curTimeSecs - lastTime;
+
+                  if (blockDuration > 0) {
+                    const percentageCalculated = isMrc
+                      ? valueVal
+                      : Math.round((valueVal / 250) * 100);
+                    loadedWorkout.blocks.push({
+                      d: blockDuration,
+                      p: percentageCalculated,
+                    });
+                  }
+                  lastTime = curTimeSecs;
+                }
+              }
+            }
+          }
+
+          if (loadedWorkout.blocks.length === 0)
+            throw new Error("No usable workout segments mapped from file.");
+
+          state.activeWorkout = loadedWorkout;
+          state.clockTime = 0;
+          state.activeBlockIndex = 0;
+          state.blockTimeElapsed = 0;
+          processActiveWorkoutTimeline();
+        } catch (err) {
+          alert("File Parsing Failed: " + err.message);
+        }
+      }
+
+      /**
+       * Core Clock Runtime Tick Loop (1Hz Engine)
+       */
+      function tickLoop() {
+        if (state.runState !== "RUNNING") return;
+
+        state.clockTime++;
+        state.blockTimeElapsed++;
+
+        let accumulatedTime = 0;
+        let matchFound = false;
+        for (let i = 0; i < state.activeWorkout.blocks.length; i++) {
+          accumulatedTime += state.activeWorkout.blocks[i].d;
+          if (state.clockTime <= accumulatedTime) {
+            if (state.activeBlockIndex !== i) {
+              state.activeBlockIndex = i;
+              state.blockTimeElapsed =
+                state.clockTime -
+                (accumulatedTime - state.activeWorkout.blocks[i].d);
+            }
+            matchFound = true;
+            break;
+          }
+        }
+
+        if (!matchFound || state.clockTime >= state.workoutTimeline.length) {
+          terminateWorkoutRun();
+          return;
+        }
+
+        const activeProfile = getActiveProfile();
+        const currentRawTargetPct =
+          state.workoutTimeline[state.clockTime].pctFtp;
+        const computedTargetWatts = Math.round(
+          activeProfile.ftp *
+            (currentRawTargetPct / 100) *
+            (activeProfile.bias / 100),
+        );
+
+        state.telemetry.target = computedTargetWatts;
+
+        // Hardware vs Simulation Pipeline
+        if (!state.ble.trainer) {
+          const noise = (Math.random() - 0.5) * 6;
+          state.telemetry.power = Math.round(
+            Math.max(0, computedTargetWatts + noise),
+          );
+          state.telemetry.cadence = 88 + Math.round((Math.random() - 0.5) * 4);
+          state.telemetry.hr =
+            110 + Math.round((computedTargetWatts / activeProfile.ftp) * 50);
+        } else {
+          if (state.mode === "ERG" && state.clockTime % 3 === 0) {
+            const p = new Uint8Array(3);
+            p[0] = 0x05; // Opcode: Set Target Power
+            p[1] = computedTargetWatts & 0xff;
+            p[2] = (computedTargetWatts >> 8) & 0xff;
+            sendControlOpcode(p);
+          }
+        }
+
+        state.history.push({
+          t: state.clockTime,
+          p: state.telemetry.power,
+          tgt: state.telemetry.target,
+          cad: state.telemetry.cadence,
+          hr: state.telemetry.hr,
+        });
+
+        state.trace.push({
+          p: state.telemetry.power,
+          tgt: state.telemetry.target,
+        });
+        if (state.trace.length > 180) state.trace.shift();
+      }
+
+      function toggleEngineExecution() {
+        if (state.runState === "STOPPED" || state.runState === "PAUSED") {
+          state.runState = "RUNNING";
+          document.getElementById("btn-engine-control").innerText = "Pause";
+          document.getElementById("btn-engine-control").className =
+            "bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-lg text-xs tracking-widest transition uppercase shadow-lg";
+        } else {
+          state.runState = "PAUSED";
+          document.getElementById("btn-engine-control").innerText = "Resume";
+          document.getElementById("btn-engine-control").className =
+            "bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg text-xs tracking-widest transition uppercase shadow-lg";
+        }
+      }
+
+      function terminateWorkoutRun() {
+        state.runState = "STOPPED";
+        document.getElementById("btn-engine-control").innerText = "Start";
+        document.getElementById("btn-engine-control").className =
+          "bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg text-xs tracking-widest transition uppercase shadow-lg";
+        if (state.history.length > 5) executeDataTcxExportSequence();
+        state.clockTime = 0;
+        state.activeBlockIndex = 0;
+        state.blockTimeElapsed = 0;
+        state.history = [];
+        state.trace = [];
+      }
+
+      /**
+       * DOM Rendering Pipeline
+       */
+      function renderTelemetryLoop() {
+        requestAnimationFrame(renderTelemetryLoop);
+
+        const t = state.telemetry;
+        const zoneInfo = calculateZone(t.power);
+
+        document.getElementById("val-power").innerText = t.power;
+        document.getElementById("zone-power").innerText = zoneInfo.name;
+        document.getElementById("zone-power").style.backgroundColor =
+          zoneInfo.color;
+        document.getElementById("indicator-power-strip").style.backgroundColor =
+          zoneInfo.color;
+
+        document.getElementById("val-target").innerText =
+          state.mode === "ERG" ? t.target : `${state.simGrade.toFixed(1)}%`;
+        document.getElementById("val-target-sub").innerText =
+          state.mode === "ERG"
+            ? "ERG Mode Target Baseline"
+            : "SIM Mode Target Grade";
+
+        const tgtZone = calculateZone(t.target);
+        document.getElementById(
+          "indicator-target-strip",
+        ).style.backgroundColor =
+          state.mode === "ERG" ? tgtZone.color : "#059669";
+
+        document.getElementById("val-cadence").innerText = Math.round(
+          t.cadence,
+        );
+        document.getElementById("val-hr").innerText = t.hr;
+
+        document.getElementById("time-elapsed").innerText = formatHHMMSS(
+          state.clockTime,
+        );
+        document.getElementById("time-remaining").innerText = formatHHMMSS(
+          state.workoutTimeline.length - state.clockTime,
+        );
+
+        if (state.activeWorkout.blocks[state.activeBlockIndex]) {
+          const curBlockDuration =
+            state.activeWorkout.blocks[state.activeBlockIndex].d;
+          document.getElementById("time-block").innerText = formatHHMMSS(
+            curBlockDuration - state.blockTimeElapsed,
+          );
+        }
+
+        renderHistoryTrace();
+      }
+
+      /**
+       * Canvas Visualization Pipelines
+       */
+      function renderStaticProfiles() {
+        const canvas = document.getElementById("canvas-profile");
+        const ctx = canvas.getContext("2d");
+        const w = canvas.width;
+        const h = canvas.height;
+
+        ctx.clearRect(0, 0, w, h);
+        if (state.workoutTimeline.length === 0) return;
+
+        const totalSecs = state.workoutTimeline.length;
+        const maxPct = Math.max(
+          ...state.workoutTimeline.map((x) => x.pctFtp),
+          120,
+        );
+
+        state.activeWorkout.blocks.forEach((b, idx) => {
+          let blockStartSecs = 0;
+          for (let k = 0; k < idx; k++)
+            blockStartSecs += state.activeWorkout.blocks[k].d;
+
+          const xStart = (blockStartSecs / totalSecs) * w;
+          const blockW = (b.d / totalSecs) * w;
+          const blockH = (b.p / maxPct) * (h - 20);
+          const yStart = h - blockH;
+
+          const mockPower = (b.p / 100) * getActiveProfile().ftp;
+          ctx.fillStyle = calculateZone(mockPower).color + "CC";
+          ctx.fillRect(xStart, yStart, blockW, blockH);
+          ctx.strokeStyle = "#1e293b";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(xStart, yStart, blockW, blockH);
+        });
+
+        if (state.clockTime > 0) {
+          const playheadX = (state.clockTime / totalSecs) * w;
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(playheadX, 0);
+          ctx.lineTo(playheadX, h);
+          ctx.stroke();
+        }
+      }
+
+      function renderHistoryTrace() {
+        const canvas = document.getElementById("canvas-trace");
+        const ctx = canvas.getContext("2d");
+        const w = canvas.width;
+        const h = canvas.height;
+
+        ctx.clearRect(0, 0, w, h);
+        if (state.trace.length === 0) return;
+
+        const maxVal = 400;
+        const step = w / 180;
+
+        // Render Target
+        ctx.strokeStyle = "rgba(234, 179, 8, 0.4)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        state.trace.forEach((pt, i) => {
+          const x = i * step;
+          const y = h - (pt.tgt / maxVal) * h;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        // Render Actual Power Output Trace
+        ctx.strokeStyle = "#22c55e";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        state.trace.forEach((pt, i) => {
+          const x = i * step;
+          const y = h - (pt.p / maxVal) * h;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      }
+
+      const originalProcessTimeline = processActiveWorkoutTimeline;
+      processActiveWorkoutTimeline = function () {
+        originalProcessTimeline();
+        renderStaticProfiles();
+      };
+
+      /**
+       * XML Serialization System (.tcx Generator)
+       */
+      function executeDataTcxExportSequence() {
+        const active = getActiveProfile();
+        const isoTimestamp = new Date().toISOString();
+        const filenameStr = `openwatt-${Math.floor(Date.now() / 1000)}.tcx`;
+
+        let wattsSum = 0;
+        let wattsMax = 0;
+        state.history.forEach((h) => {
+          wattsSum += h.p;
+          if (h.p > wattsMax) wattsMax = h.p;
+        });
+        const avgWatts = Math.round(wattsSum / state.history.length);
+
+        let tcx = `<?xml version="1.0" encoding="UTF-8"?>
 <TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:ns3="http://www.garmin.com/xmlschemas/ActivityExtension/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd">
   <Activities>
     <Activity Sport="Biking">
@@ -1033,9 +1701,11 @@
         <TriggerMethod>Manual</TriggerMethod>
         <Track>`;
 
-      state.history.forEach((pt) => {
-        const trackpointTime = new Date(Date.now() - (state.history.length - pt.t)*1000).toISOString();
-        tcx += `
+        state.history.forEach((pt) => {
+          const trackpointTime = new Date(
+            Date.now() - (state.history.length - pt.t) * 1000,
+          ).toISOString();
+          tcx += `
           <Trackpoint>
             <Time>${trackpointTime}</Time>
             <Cadence>${Math.round(pt.cad)}</Cadence>
@@ -1046,9 +1716,9 @@
               </TPX>
             </Extensions>
           </Trackpoint>`;
-      });
+        });
 
-      tcx += `
+        tcx += `
         </Track>
         <Extensions>
           <LX xmlns="http://www.garmin.com/xmlschemas/ActivityExtension/v2">
@@ -1061,96 +1731,167 @@
   </Activities>
 </TrainingCenterDatabase>`;
 
-      const blob = new Blob([tcx], { type: 'application/xml' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = filenameStr;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
+        const blob = new Blob([tcx], { type: "application/xml" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filenameStr;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
 
-    /**
-     * Input Interaction Event Registration
-     */
-    function bindInputEvents() {
-      document.getElementById('btn-connect-trainer').addEventListener('click', connectTrainerGATT);
-      document.getElementById('btn-connect-hr').addEventListener('click', connectHeartRateGATT);
-      document.getElementById('btn-engine-control').addEventListener('click', toggleEngineExecution);
-      document.getElementById('btn-add-profile').addEventListener('click', addProfile);
-      
-      document.getElementById('mode-erg').addEventListener('click', () => setExecutionMode('ERG'));
-      document.getElementById('mode-sim').addEventListener('click', () => setExecutionMode('SIM'));
+      /**
+       * Input Interaction Event Registration
+       */
+      function bindInputEvents() {
+        document
+          .getElementById("btn-connect-trainer")
+          .addEventListener("click", connectTrainerGATT);
+        document
+          .getElementById("btn-connect-hr")
+          .addEventListener("click", connectHeartRateGATT);
+        document
+          .getElementById("btn-engine-control")
+          .addEventListener("click", toggleEngineExecution);
+        document
+          .getElementById("btn-add-profile")
+          .addEventListener("click", addProfile);
 
-      document.getElementById('slider-grade').addEventListener('input', (e) => {
-        state.simGrade = parseFloat(e.target.value);
-        document.getElementById('label-grade').innerText = `${state.simGrade.toFixed(1)}%`;
-        assertHardwareSimulationParameters();
-      });
+        document
+          .getElementById("mode-erg")
+          .addEventListener("click", () => setExecutionMode("ERG"));
+        document
+          .getElementById("mode-sim")
+          .addEventListener("click", () => setExecutionMode("SIM"));
 
-      const handleGradeStep = (diff) => {
-        const s = document.getElementById('slider-grade');
-        s.value = Math.min(20, Math.max(-10, parseFloat(s.value) + diff));
-        s.dispatchEvent(new Event('input'));
-      };
-      document.getElementById('btn-grade-down').addEventListener('click', () => handleGradeStep(-0.5));
-      document.getElementById('btn-grade-up').addEventListener('click', () => handleGradeStep(0.5));
+        document
+          .getElementById("slider-grade")
+          .addEventListener("input", (e) => {
+            state.simGrade = parseFloat(e.target.value);
+            document.getElementById("label-grade").innerText =
+              `${state.simGrade.toFixed(1)}%`;
+            assertHardwareSimulationParameters();
+          });
 
-      const sliderBias = document.getElementById('slider-bias');
-      sliderBias.addEventListener('input', (e) => {
-        const val = parseInt(e.target.value, 10);
-        getActiveProfile().bias = val;
-        document.getElementById('label-bias').innerText = `${val}%`;
-        saveStorage();
-      });
-      document.getElementById('btn-bias-down').addEventListener('click', () => { sliderBias.value = Math.max(50, parseInt(sliderBias.value,10)-2); sliderBias.dispatchEvent(new Event('input')); });
-      document.getElementById('btn-bias-up').addEventListener('click', () => { sliderBias.value = Math.min(150, parseInt(sliderBias.value,10)+2); sliderBias.dispatchEvent(new Event('input')); });
+        const handleGradeStep = (diff) => {
+          const s = document.getElementById("slider-grade");
+          s.value = Math.min(20, Math.max(-10, parseFloat(s.value) + diff));
+          s.dispatchEvent(new Event("input"));
+        };
+        document
+          .getElementById("btn-grade-down")
+          .addEventListener("click", () => handleGradeStep(-0.5));
+        document
+          .getElementById("btn-grade-up")
+          .addEventListener("click", () => handleGradeStep(0.5));
 
-      document.getElementById('select-workout').addEventListener('change', (e) => {
-        state.activeWorkout = JSON.parse(JSON.stringify(WORKOUT_PRESETS[e.target.value]));
-        state.clockTime = 0; state.activeBlockIndex = 0; state.blockTimeElapsed = 0;
-        processActiveWorkoutTimeline();
-      });
+        const sliderBias = document.getElementById("slider-bias");
+        sliderBias.addEventListener("input", (e) => {
+          const val = parseInt(e.target.value, 10);
+          getActiveProfile().bias = val;
+          document.getElementById("label-bias").innerText = `${val}%`;
+          saveStorage();
+        });
+        document
+          .getElementById("btn-bias-down")
+          .addEventListener("click", () => {
+            sliderBias.value = Math.max(50, parseInt(sliderBias.value, 10) - 2);
+            sliderBias.dispatchEvent(new Event("input"));
+          });
+        document.getElementById("btn-bias-up").addEventListener("click", () => {
+          sliderBias.value = Math.min(150, parseInt(sliderBias.value, 10) + 2);
+          sliderBias.dispatchEvent(new Event("input"));
+        });
 
-      document.getElementById('btn-seg-restart').addEventListener('click', () => mutateSection('RESTART'));
-      document.getElementById('btn-seg-minus').addEventListener('click', () => mutateSection('MINUS_30'));
-      document.getElementById('btn-seg-plus').addEventListener('click', () => mutateSection('PLUS_30'));
-      document.getElementById('btn-seg-skip').addEventListener('click', () => mutateSection('SKIP'));
+        document
+          .getElementById("select-workout")
+          .addEventListener("change", (e) => {
+            state.activeWorkout = JSON.parse(
+              JSON.stringify(WORKOUT_PRESETS[e.target.value]),
+            );
+            state.clockTime = 0;
+            state.activeBlockIndex = 0;
+            state.blockTimeElapsed = 0;
+            processActiveWorkoutTimeline();
+          });
 
-      window.addEventListener('keydown', (e) => {
-        if(e.key === 'ArrowLeft') mutateSection('RESTART');
-        if(e.key === 'ArrowRight') mutateSection('SKIP');
-        if(e.key === '-' || e.key === '_') mutateSection('MINUS_30');
-        if(e.key === '+' || e.key === '=') mutateSection('PLUS_30');
-        if(e.key.toLowerCase() === 'm') setExecutionMode(state.mode === 'ERG' ? 'SIM' : 'ERG');
-        if(e.key === ' ') { e.preventDefault(); toggleEngineExecution(); }
-      });
+        document
+          .getElementById("btn-seg-restart")
+          .addEventListener("click", () => mutateSection("RESTART"));
+        document
+          .getElementById("btn-seg-minus")
+          .addEventListener("click", () => mutateSection("MINUS_30"));
+        document
+          .getElementById("btn-seg-plus")
+          .addEventListener("click", () => mutateSection("PLUS_30"));
+        document
+          .getElementById("btn-seg-skip")
+          .addEventListener("click", () => mutateSection("SKIP"));
 
-      document.getElementById('chk-buttons-enable').addEventListener('change', (e) => { state.buttonConfig.enabled = e.target.checked; saveStorage(); });
-      
-      document.getElementById('btn-add-binding').addEventListener('click', () => {
-        state.buttonConfig.bindings.push({ buttonId: '0001', action: 'none' });
-        saveStorage();
-        buildUIElements();
-      });
+        window.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowLeft") mutateSection("RESTART");
+          if (e.key === "ArrowRight") mutateSection("SKIP");
+          if (e.key === "-" || e.key === "_") mutateSection("MINUS_30");
+          if (e.key === "+" || e.key === "=") mutateSection("PLUS_30");
+          if (e.key.toLowerCase() === "m")
+            setExecutionMode(state.mode === "ERG" ? "SIM" : "ERG");
+          if (e.key === " ") {
+            e.preventDefault();
+            toggleEngineExecution();
+          }
+        });
 
-      const dz = document.getElementById('drop-zone');
-      dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('border-blue-500'); });
-      dz.addEventListener('dragleave', () => dz.classList.remove('border-blue-500'));
-      dz.addEventListener('drop', (e) => {
-        e.preventDefault(); dz.classList.remove('border-blue-500');
-        if(e.dataTransfer.files.length > 0) processFileHandle(e.dataTransfer.files[0]);
-      });
-      dz.addEventListener('click', () => document.getElementById('file-input').click());
-      document.getElementById('file-input').addEventListener('change', (e) => { if(e.target.files.length > 0) processFileHandle(e.target.files[0]); });
-    }
+        document
+          .getElementById("chk-buttons-enable")
+          .addEventListener("change", (e) => {
+            state.buttonConfig.enabled = e.target.checked;
+            saveStorage();
+          });
 
-    function processFileHandle(file) {
-      const r = new FileReader();
-      r.onload = (e) => parseWorkoutFileContent(file.name, e.target.result);
-      r.readAsText(file);
-    }
+        document
+          .getElementById("btn-add-binding")
+          .addEventListener("click", () => {
+            state.buttonConfig.bindings.push({
+              buttonId: "0001",
+              action: "none",
+            });
+            saveStorage();
+            buildUIElements();
+          });
 
-    init();
-  </script>
-</body>
+        const dz = document.getElementById("drop-zone");
+        dz.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          dz.classList.add("border-blue-500");
+        });
+        dz.addEventListener("dragleave", () =>
+          dz.classList.remove("border-blue-500"),
+        );
+        dz.addEventListener("drop", (e) => {
+          e.preventDefault();
+          dz.classList.remove("border-blue-500");
+          if (e.dataTransfer.files.length > 0)
+            processFileHandle(e.dataTransfer.files[0]);
+        });
+        dz.addEventListener("click", () =>
+          document.getElementById("file-input").click(),
+        );
+        document
+          .getElementById("file-input")
+          .addEventListener("change", (e) => {
+            if (e.target.files.length > 0) processFileHandle(e.target.files[0]);
+          });
+      }
+
+      function processFileHandle(file) {
+        const r = new FileReader();
+        r.onload = (e) => parseWorkoutFileContent(file.name, e.target.result);
+        r.readAsText(file);
+      }
+
+      init();
+    </script>
+  </body>
 </html>
