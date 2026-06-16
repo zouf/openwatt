@@ -136,69 +136,36 @@
           id="tab-workout"
           class="flex-1 flex flex-col w-full h-full block absolute inset-0"
         >
-          <!-- Top Grid -->
+          <!-- Top Radial Dashboard -->
           <div
-            class="grid grid-cols-3 w-full px-12 pt-8 pb-4 h-[40%] min-h-[250px]"
+            class="flex items-center justify-between w-full px-12 pt-8 pb-4 h-[40%] min-h-[350px]"
           >
-            <!-- LEFT: Power & Target -->
-            <div class="flex flex-col items-center justify-center space-y-8">
-              <div class="text-center">
+            <!-- LEFT METRICS -->
+            <div
+              class="flex flex-col items-start justify-center space-y-6 w-1/4 bg-[#111] p-6 rounded-2xl border border-[#333]"
+            >
+              <div class="w-full">
                 <div
-                  class="text-[11px] font-bold tracking-[0.25em] text-[#aaaaaa] uppercase mb-1"
-                >
-                  Power
-                </div>
-                <div
-                  id="val-power"
-                  class="text-[80px] leading-none font-black font-sans text-white tracking-tighter"
-                >
-                  ---
-                </div>
-                <div
-                  id="zone-power"
-                  class="text-[9px] font-bold uppercase tracking-widest text-transparent mt-1 h-3"
-                ></div>
-              </div>
-              <div class="text-center">
-                <div
-                  class="text-[11px] font-bold tracking-[0.25em] text-[#aaaaaa] uppercase mb-1"
-                >
-                  Target
-                </div>
-                <div
-                  id="val-target"
-                  class="text-[100px] leading-none font-black font-sans text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]"
-                >
-                  0
-                </div>
-                <div id="val-target-sub" class="hidden"></div>
-              </div>
-            </div>
-
-            <!-- CENTER: Interval Time & Workout Time -->
-            <div class="flex flex-col items-center justify-center space-y-8">
-              <div class="text-center">
-                <div
-                  class="text-[11px] font-bold tracking-[0.25em] text-[#aaaaaa] uppercase mb-1"
+                  class="text-[10px] font-black tracking-widest text-[#888] uppercase mb-1"
                 >
                   Interval Time
                 </div>
                 <div
                   id="time-block"
-                  class="text-[110px] leading-none font-black font-sans text-white tracking-tighter"
+                  class="text-5xl leading-none font-black text-white tracking-tighter"
                 >
                   00:00
                 </div>
               </div>
-              <div class="text-center">
+              <div class="w-full pt-4 border-t border-[#333]">
                 <div
-                  class="text-[11px] font-bold tracking-[0.25em] text-[#aaaaaa] uppercase mb-1"
+                  class="text-[10px] font-black tracking-widest text-[#888] uppercase mb-1"
                 >
                   Workout Time
                 </div>
                 <div
                   id="time-elapsed"
-                  class="text-[110px] leading-none font-black font-sans text-white tracking-tighter"
+                  class="text-4xl leading-none font-black text-[#ccc] tracking-tighter"
                 >
                   0:00:00
                 </div>
@@ -206,37 +173,166 @@
               </div>
             </div>
 
-            <!-- RIGHT: Heart Rate & Cadence -->
-            <div class="flex flex-col items-center justify-center space-y-8">
-              <div class="text-center">
+            <!-- CENTER HERO RADIAL -->
+            <div
+              class="flex flex-col items-center justify-center w-2/4 relative mt-4"
+            >
+              <div
+                class="relative flex items-center justify-center w-[280px] h-[280px]"
+              >
+                <!-- Target Arc Background (Grey) -->
+                <svg
+                  class="absolute inset-0 w-full h-full -rotate-90 drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]"
+                >
+                  <circle
+                    cx="140"
+                    cy="140"
+                    r="120"
+                    stroke="#111"
+                    stroke-width="12"
+                    fill="none"
+                  ></circle>
+                  <!-- 10s Arc -->
+                  <circle
+                    id="dial-10s"
+                    cx="140"
+                    cy="140"
+                    r="120"
+                    stroke="#ea580c"
+                    stroke-width="12"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-dasharray="753.9"
+                    stroke-dashoffset="753.9"
+                    class="transition-all duration-300"
+                  ></circle>
+
+                  <!-- 3s Arc (Inner) -->
+                  <circle
+                    cx="140"
+                    cy="140"
+                    r="102"
+                    stroke="#111"
+                    stroke-width="6"
+                    fill="none"
+                  ></circle>
+                  <circle
+                    id="dial-3s"
+                    cx="140"
+                    cy="140"
+                    r="102"
+                    stroke="#f97316"
+                    stroke-width="6"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-dasharray="640.8"
+                    stroke-dashoffset="640.8"
+                    class="transition-all duration-300"
+                  ></circle>
+                </svg>
+
+                <!-- Central Power Readout -->
                 <div
-                  class="text-[11px] font-bold tracking-[0.25em] text-[#aaaaaa] uppercase mb-1"
+                  class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-2"
+                >
+                  <div
+                    class="text-[9px] font-black tracking-[0.3em] text-[#888] uppercase"
+                  >
+                    Live Power
+                  </div>
+                  <div
+                    id="val-power"
+                    class="text-[85px] leading-none font-black text-white tracking-tighter drop-shadow-[0_0_20px_rgba(234,88,12,0.3)]"
+                  >
+                    0
+                  </div>
+                  <div
+                    id="zone-power"
+                    class="text-[9px] font-bold uppercase tracking-widest text-transparent mt-1 h-3"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Target Readout Below -->
+              <div
+                class="absolute -bottom-6 flex items-center gap-6 bg-[#0a0a0a] px-6 py-3 rounded-full border border-[#222] shadow-xl shadow-black/50"
+              >
+                <div class="text-center flex flex-col">
+                  <span
+                    class="text-[8px] uppercase tracking-widest text-[#888] font-black"
+                    >Target</span
+                  >
+                  <span
+                    id="val-target"
+                    class="text-2xl font-black text-white leading-none"
+                    >0</span
+                  >
+                  <div id="val-target-sub" class="hidden"></div>
+                </div>
+                <div class="w-px h-6 bg-[#333]"></div>
+                <div class="flex gap-4">
+                  <div class="text-center">
+                    <div
+                      class="text-[8px] uppercase tracking-widest text-[#ea580c] font-black"
+                    >
+                      3s Avg
+                    </div>
+                    <div
+                      id="val-power-3s"
+                      class="text-lg font-bold text-white leading-none"
+                    >
+                      0
+                    </div>
+                  </div>
+                  <div class="text-center">
+                    <div
+                      class="text-[8px] uppercase tracking-widest text-[#ea580c] font-black"
+                    >
+                      10s Avg
+                    </div>
+                    <div
+                      id="val-power-10s"
+                      class="text-lg font-bold text-white leading-none"
+                    >
+                      0
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT METRICS -->
+            <div
+              class="flex flex-col items-end justify-center space-y-6 w-1/4 bg-[#111] p-6 rounded-2xl border border-[#333]"
+            >
+              <div class="w-full text-right">
+                <div
+                  class="text-[10px] font-black tracking-widest text-[#888] uppercase mb-1"
                 >
                   Heart Rate
                 </div>
                 <div
                   id="val-hr"
-                  class="text-[80px] leading-none font-black font-sans text-white tracking-tighter"
+                  class="text-5xl leading-none font-black text-white tracking-tighter text-red-500"
                 >
-                  ---
+                  0
                 </div>
               </div>
-              <div class="text-center">
+              <div class="w-full text-right pt-4 border-t border-[#333]">
                 <div
-                  class="text-[11px] font-bold tracking-[0.25em] text-[#aaaaaa] uppercase mb-1"
+                  class="text-[10px] font-black tracking-widest text-[#888] uppercase mb-1"
                 >
                   Cadence
                 </div>
                 <div
                   id="val-cadence"
-                  class="text-[80px] leading-none font-black font-sans text-white tracking-tighter"
+                  class="text-5xl leading-none font-black text-[#ccc] tracking-tighter"
                 >
-                  ---
+                  0
                 </div>
               </div>
             </div>
           </div>
-
           <!-- Middle: Stats Bar & Full Bleed Chart -->
           <div
             class="flex-1 w-full flex flex-col relative bg-[#050505] border-t border-[#333]"
@@ -369,15 +465,17 @@
             <div class="flex items-center gap-4">
               <div
                 id="status-trainer"
-                class="bg-red-600 text-white px-3 py-1 rounded text-[10px] font-bold tracking-widest uppercase flex items-center gap-2"
+                class="bg-[#111] text-[#888] border border-[#333] px-3 py-1 rounded text-[10px] font-bold tracking-widest uppercase flex items-center gap-2"
               >
-                Trainer: Disconnected
+                <div class="w-2 h-2 rounded-full bg-[#555]"></div>
+                Trainer: Offline
               </div>
               <div
                 id="status-hr"
-                class="bg-red-600 text-white px-3 py-1 rounded text-[10px] font-bold tracking-widest uppercase flex items-center gap-2"
+                class="bg-[#111] text-[#888] border border-[#333] px-3 py-1 rounded text-[10px] font-bold tracking-widest uppercase flex items-center gap-2"
               >
-                HR: Disconnected
+                <div class="w-2 h-2 rounded-full bg-[#555]"></div>
+                HR: Offline
               </div>
             </div>
 
@@ -1047,8 +1145,8 @@
             ],
           });
 
-          document.getElementById("status-trainer").innerText =
-            "Connecting to device server...";
+          document.getElementById("status-trainer").innerHTML =
+            `<div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>Connecting...`;
           const server = await device.gatt.connect();
           state.ble.trainer = server;
 
@@ -1080,8 +1178,8 @@
           await sendControlOpcode(new Uint8Array([0x00]));
           await sendControlOpcode(new Uint8Array([0x07]));
 
-          document.getElementById("status-trainer").innerText =
-            `Connected: ${device.name}`;
+          document.getElementById("status-trainer").innerHTML =
+            `<div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>${device.name}`;
 
           // Dynamically subscribe to all characteristics in Wahoo custom services
           const wahooServiceUUIDs = [
@@ -1123,8 +1221,8 @@
             );
           }
         } catch (e) {
-          document.getElementById("status-trainer").innerText =
-            `GATT Fault: ${e.message}`;
+          document.getElementById("status-trainer").innerHTML =
+            `<div class="w-2 h-2 rounded-full bg-red-600"></div>GATT FAULT: ${e.message}`;
         }
       }
 
