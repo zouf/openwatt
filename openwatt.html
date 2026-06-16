@@ -8,7 +8,7 @@
       body {
         background-color: #0f172a;
         color: #f8fafc;
-        font-family: ui-sans-serif, system-ui, sans-serif;
+        font-family: "Space Grotesk", system-ui, sans-serif;
       }
       .zone-z1 {
         color: #94a3b8;
@@ -53,6 +53,10 @@
         background-color: #9333ea;
       }
     </style>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;900&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body
     class="bg-black text-slate-200 selection:bg-orange-500/30 font-sans h-screen flex flex-col overflow-hidden"
@@ -584,7 +588,9 @@
         document
           .getElementById("nav-" + tabId)
           .classList.remove("text-slate-500");
-        document.getElementById("nav-" + tabId).classList.add("text-orange-500");
+        document
+          .getElementById("nav-" + tabId)
+          .classList.add("text-orange-500");
       }
 
       const WORKOUT_PRESETS = [
@@ -739,7 +745,15 @@
         blockTimeElapsed: 0,
         mode: "ERG",
         simGrade: 0.0,
-        telemetry: { power: 0, target: 0, cadence: 0, hr: 0 },
+        telemetry: {
+          power: 0,
+          target: 0,
+          cadence: 0,
+          hr: 0,
+          powerHistory: [],
+          power3s: 0,
+          power10s: 0,
+        },
         history: [],
         trace: [],
         buttonConfig: {
@@ -1184,7 +1198,30 @@
           offset += 2;
         }
         if (flags & (1 << 6)) {
-          state.telemetry.power = val.getInt16(offset, true);
+          const power = val.getInt16(offset, true);
+          state.telemetry.power = power;
+
+          const now = Date.now();
+          state.telemetry.powerHistory.push({ t: now, v: power });
+          // Remove old data > 10.5 seconds
+          state.telemetry.powerHistory = state.telemetry.powerHistory.filter(
+            (x) => now - x.t <= 10500,
+          );
+
+          const p3 = state.telemetry.powerHistory.filter(
+            (x) => now - x.t <= 3000,
+          );
+          const p10 = state.telemetry.powerHistory.filter(
+            (x) => now - x.t <= 10000,
+          );
+
+          state.telemetry.power3s = p3.length
+            ? Math.round(p3.reduce((a, b) => a + b.v, 0) / p3.length)
+            : power;
+          state.telemetry.power10s = p10.length
+            ? Math.round(p10.reduce((a, b) => a + b.v, 0) / p10.length)
+            : power;
+
           offset += 2;
         }
       }
