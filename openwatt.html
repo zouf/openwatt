@@ -347,6 +347,7 @@
               <div class="flex gap-12">
                 <div class="text-center">
                   <div
+                    id="stat-int-pow"
                     class="text-white text-xs font-black tracking-widest mb-0.5"
                   >
                     ---
@@ -355,6 +356,7 @@
                 </div>
                 <div class="text-center">
                   <div
+                    id="stat-int-hr"
                     class="text-white text-xs font-black tracking-widest mb-0.5"
                   >
                     ---
@@ -363,6 +365,7 @@
                 </div>
                 <div class="text-center">
                   <div
+                    id="stat-int-cad"
                     class="text-white text-xs font-black tracking-widest mb-0.5"
                   >
                     ---
@@ -371,6 +374,7 @@
                 </div>
                 <div class="text-center">
                   <div
+                    id="stat-tss"
                     class="text-white text-xs font-black tracking-widest mb-0.5"
                   >
                     ---
@@ -379,6 +383,7 @@
                 </div>
                 <div class="text-center">
                   <div
+                    id="stat-kj"
                     class="text-white text-xs font-black tracking-widest mb-0.5"
                   >
                     ---
@@ -387,6 +392,7 @@
                 </div>
                 <div class="text-center">
                   <div
+                    id="stat-np"
                     class="text-white text-xs font-black tracking-widest mb-0.5"
                   >
                     ---
@@ -395,6 +401,7 @@
                 </div>
                 <div class="text-center">
                   <div
+                    id="stat-avg-pow"
                     class="text-white text-xs font-black tracking-widest mb-0.5"
                   >
                     ---
@@ -497,7 +504,7 @@
                 id="btn-seg-plus"
                 class="bg-[#333] hover:bg-[#444] text-white font-bold py-1.5 px-3 rounded text-[10px] tracking-widest uppercase transition"
               >
-                + 1 Min
+                + 30s
               </button>
               <button
                 id="btn-seg-skip"
@@ -886,9 +893,6 @@
         if (ap) state.activeProfileId = ap;
         const bc = localStorage.getItem("openwatt_button_config_v3");
         if (bc) state.buttonConfig = JSON.parse(bc);
-
-        const active = getActiveProfile();
-        if (active) state.activeWorkout.bias = active.bias || 100;
       }
 
       function saveStorage() {
@@ -924,7 +928,7 @@
           const chip = document.createElement("div");
           chip.className = `flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-semibold cursor-pointer transition ${
             isSelected
-              ? "bg-orange-600 border-blue-500 text-white shadow-md"
+              ? "bg-orange-600 border-orange-500 text-white shadow-md"
               : "bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600"
           }`;
 
@@ -955,6 +959,20 @@
           opt.innerText = `${w.name} \u2022 ${w.desc}`;
           selectWk.appendChild(opt);
         });
+        // Keep the dropdown in sync with whatever workout is actually loaded.
+        const activeIdx = WORKOUT_PRESETS.findIndex(
+          (w) => w.id === state.activeWorkout.id,
+        );
+        if (activeIdx >= 0) {
+          selectWk.value = activeIdx;
+        } else {
+          // Imported / non-preset workout: show it as a selected entry.
+          const opt = document.createElement("option");
+          opt.value = "imported";
+          opt.innerText = `${state.activeWorkout.name} \u2022 ${state.activeWorkout.desc}`;
+          opt.selected = true;
+          selectWk.appendChild(opt);
+        }
 
         const bindingsContainer = document.getElementById("button-bindings");
         bindingsContainer.innerHTML = "";
@@ -1464,6 +1482,16 @@
         await sendControlOpcode(payload);
       }
 
+      // On stop, drop the trainer's resistance so it doesn't keep holding the
+      // last ERG wattage. Zeroes the ERG target and flattens the SIM grade.
+      async function releaseTrainerLoad() {
+        if (!state.ble.txChar) return;
+        const zeroTarget = new Uint8Array([0x05, 0x00, 0x00]); // Set Target Power = 0W
+        await sendControlOpcode(zeroTarget);
+        const flatSim = new Uint8Array([0x11, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00]); // grade 0%
+        await sendControlOpcode(flatSim);
+      }
+
       /**
        * File Processing Core Engines (.zwo, .erg, .mrc)
        */
@@ -1481,9 +1509,28 @@
               textData,
               "application/xml",
             );
+            if (doc.querySelector("parsererror"))
+              throw new Error("Malformed ZWO XML.");
             const workoutNode = doc.querySelector("workout");
             if (!workoutNode)
               throw new Error("Invalid ZWO layout container structure.");
+
+            const pct = (v) => Math.round(parseFloat(v) * 100);
+            // Approximate a power ramp as a series of short stepped blocks,
+            // since the engine holds one constant target per block.
+            const pushRamp = (dur, fromPct, toPct) => {
+              if (!(dur > 0)) return;
+              const stepLen = 30;
+              const steps = Math.max(1, Math.round(dur / stepLen));
+              const each = dur / steps;
+              for (let i = 0; i < steps; i++) {
+                const frac = steps === 1 ? 0 : i / (steps - 1);
+                loadedWorkout.blocks.push({
+                  d: Math.round(each),
+                  p: Math.round(fromPct + (toPct - fromPct) * frac),
+                });
+              }
+            };
 
             for (let node of workoutNode.children) {
               const tag = node.tagName.toLowerCase();
@@ -1491,29 +1538,30 @@
               if (tag === "steadystate") {
                 loadedWorkout.blocks.push({
                   d: d,
-                  p: Math.round(parseFloat(node.getAttribute("Power")) * 100),
+                  p: pct(node.getAttribute("Power")),
                 });
-              } else if (tag === "intervalsrepeat") {
+              } else if (tag === "intervalst" || tag === "intervalsrepeat") {
                 const repeatCount = parseInt(node.getAttribute("Repeat"), 10);
                 const d1 = parseInt(node.getAttribute("OnDuration"), 10);
-                const p1 = Math.round(
-                  parseFloat(node.getAttribute("OnPower")) * 100,
-                );
+                const p1 = pct(node.getAttribute("OnPower"));
                 const d2 = parseInt(node.getAttribute("OffDuration"), 10);
-                const p2 = Math.round(
-                  parseFloat(node.getAttribute("OffPower")) * 100,
-                );
+                const p2 = pct(node.getAttribute("OffPower"));
                 for (let r = 0; r < repeatCount; r++) {
                   loadedWorkout.blocks.push({ d: d1, p: p1 });
                   loadedWorkout.blocks.push({ d: d2, p: p2 });
                 }
-              } else if (tag === "warmup" || tag === "cooldown") {
-                loadedWorkout.blocks.push({
-                  d: d,
-                  p: Math.round(
-                    parseFloat(node.getAttribute("PowerLow")) * 100,
-                  ),
-                });
+              } else if (
+                tag === "warmup" ||
+                tag === "cooldown" ||
+                tag === "ramp"
+              ) {
+                // Warmup ramps up, cooldown ramps down; both carry Power Low/High.
+                const lo = pct(node.getAttribute("PowerLow"));
+                const hi = pct(node.getAttribute("PowerHigh"));
+                pushRamp(d, lo, hi);
+              } else if (tag === "freeride") {
+                // No target in free ride — hold a light Z1 guide value.
+                loadedWorkout.blocks.push({ d: d, p: 50 });
               }
             }
           } else if (fileName.endsWith(".erg") || fileName.endsWith(".mrc")) {
@@ -1537,9 +1585,12 @@
                   const blockDuration = curTimeSecs - lastTime;
 
                   if (blockDuration > 0) {
+                    // .mrc values are already %FTP; .erg values are absolute
+                    // watts, so scale against the active rider's FTP.
+                    const ergFtp = getActiveProfile().ftp || 250;
                     const percentageCalculated = isMrc
                       ? valueVal
-                      : Math.round((valueVal / 250) * 100);
+                      : Math.round((valueVal / ergFtp) * 100);
                     loadedWorkout.blocks.push({
                       d: blockDuration,
                       p: percentageCalculated,
@@ -1559,6 +1610,7 @@
           state.activeBlockIndex = 0;
           state.blockTimeElapsed = 0;
           processActiveWorkoutTimeline();
+          buildUIElements();
         } catch (err) {
           alert("File Parsing Failed: " + err.message);
         }
@@ -1637,6 +1689,65 @@
           tgt: state.telemetry.target,
         });
         if (state.trace.length > 180) state.trace.shift();
+
+        updateStatsBar();
+      }
+
+      /**
+       * Ride Statistics (interval + whole-workout aggregates)
+       */
+      function normalizedPower(samples) {
+        // 30s rolling average, raised to the 4th power, averaged, 4th root.
+        if (samples.length === 0) return 0;
+        const win = 30;
+        const rolled = [];
+        for (let i = 0; i < samples.length; i++) {
+          const start = Math.max(0, i - win + 1);
+          const slice = samples.slice(start, i + 1);
+          const avg = slice.reduce((a, b) => a + b, 0) / slice.length;
+          rolled.push(Math.pow(avg, 4));
+        }
+        const mean = rolled.reduce((a, b) => a + b, 0) / rolled.length;
+        return Math.pow(mean, 0.25);
+      }
+
+      function updateStatsBar() {
+        const ftp = getActiveProfile().ftp || 250;
+        const hist = state.history;
+        const set = (id, v) => {
+          const el = document.getElementById(id);
+          if (el) el.innerText = v;
+        };
+        if (hist.length === 0) {
+          ["stat-int-pow", "stat-int-hr", "stat-int-cad", "stat-tss",
+            "stat-kj", "stat-np", "stat-avg-pow"].forEach((id) => set(id, "---"));
+          return;
+        }
+
+        // Current-interval averages (samples since the active block began).
+        const blockStart = state.clockTime - state.blockTimeElapsed;
+        const intSamples = hist.filter((h) => h.t > blockStart);
+        const avg = (arr, key) =>
+          arr.length
+            ? Math.round(arr.reduce((a, b) => a + b[key], 0) / arr.length)
+            : 0;
+        set("stat-int-pow", avg(intSamples, "p") + "W");
+        set("stat-int-hr", avg(intSamples, "hr") || "--");
+        set("stat-int-cad", avg(intSamples, "cad"));
+
+        // Whole-ride aggregates.
+        const powers = hist.map((h) => h.p);
+        const avgPow = Math.round(powers.reduce((a, b) => a + b, 0) / powers.length);
+        const np = Math.round(normalizedPower(powers));
+        const intensity = np / ftp;
+        const tss = Math.round(
+          ((hist.length * np * intensity) / (ftp * 3600)) * 100,
+        );
+        const kj = Math.round(powers.reduce((a, b) => a + b, 0) / 1000);
+        set("stat-avg-pow", avgPow + "W");
+        set("stat-np", np + "W");
+        set("stat-tss", tss);
+        set("stat-kj", kj);
       }
 
       function toggleEngineExecution() {
@@ -1644,26 +1755,29 @@
           state.runState = "RUNNING";
           document.getElementById("btn-engine-control").innerText = "Pause";
           document.getElementById("btn-engine-control").className =
-            "bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-lg text-xs tracking-widest transition uppercase shadow-lg";
+            "bg-red-600 hover:bg-red-500 text-white font-bold py-1.5 px-6 rounded text-xs tracking-widest transition uppercase ml-2";
         } else {
           state.runState = "PAUSED";
           document.getElementById("btn-engine-control").innerText = "Resume";
           document.getElementById("btn-engine-control").className =
-            "bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 px-6 rounded-lg text-xs tracking-widest transition uppercase shadow-lg";
+            "bg-orange-600 hover:bg-orange-500 text-white font-bold py-1.5 px-6 rounded text-xs tracking-widest transition uppercase ml-2";
         }
       }
 
       function terminateWorkoutRun() {
         state.runState = "STOPPED";
+        // Release the trainer so it stops holding the last ERG target.
+        releaseTrainerLoad();
         document.getElementById("btn-engine-control").innerText = "Start";
         document.getElementById("btn-engine-control").className =
-          "bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 px-6 rounded-lg text-xs tracking-widest transition uppercase shadow-lg";
+          "bg-orange-600 hover:bg-orange-500 text-white font-bold py-1.5 px-6 rounded text-xs tracking-widest transition uppercase ml-2";
         if (state.history.length > 5) executeDataTcxExportSequence();
         state.clockTime = 0;
         state.activeBlockIndex = 0;
         state.blockTimeElapsed = 0;
         state.history = [];
         state.trace = [];
+        updateStatsBar();
       }
 
       /**
@@ -1716,6 +1830,7 @@
         }
 
         renderHistoryTrace();
+        renderStaticProfiles(); // redraw profile + live playhead each frame
       }
 
       /**
@@ -1943,9 +2058,9 @@
         document
           .getElementById("select-workout")
           .addEventListener("change", (e) => {
-            state.activeWorkout = JSON.parse(
-              JSON.stringify(WORKOUT_PRESETS[e.target.value]),
-            );
+            const preset = WORKOUT_PRESETS[e.target.value];
+            if (!preset) return; // ignore the synthetic "imported" entry
+            state.activeWorkout = JSON.parse(JSON.stringify(preset));
             state.clockTime = 0;
             state.activeBlockIndex = 0;
             state.blockTimeElapsed = 0;
@@ -1996,23 +2111,45 @@
             buildUIElements();
           });
 
-        const dz = document.getElementById("drop-zone");
-        dz.addEventListener("dragover", (e) => {
+        // The overlay markup lives after this script, so resolve it lazily.
+        let dragDepth = 0;
+        const showDrop = () => {
+          const dz = document.getElementById("dropzone");
+          if (dz) {
+            dz.classList.remove("hidden");
+            dz.onclick = hideDrop; // click overlay to dismiss
+          }
+        };
+        const hideDrop = () => {
+          const dz = document.getElementById("dropzone");
+          if (dz) dz.classList.add("hidden");
+        };
+
+        // Reveal the fullscreen overlay whenever a file is dragged over the page.
+        window.addEventListener("dragenter", (e) => {
+          if (
+            !e.dataTransfer ||
+            !Array.from(e.dataTransfer.types).includes("Files")
+          )
+            return;
           e.preventDefault();
-          dz.classList.add("border-blue-500");
+          dragDepth++;
+          showDrop();
         });
-        dz.addEventListener("dragleave", () =>
-          dz.classList.remove("border-blue-500"),
-        );
-        dz.addEventListener("drop", (e) => {
+        window.addEventListener("dragover", (e) => {
+          if (dragDepth > 0) e.preventDefault();
+        });
+        window.addEventListener("dragleave", () => {
+          if (dragDepth > 0) dragDepth--;
+          if (dragDepth === 0) hideDrop();
+        });
+        window.addEventListener("drop", (e) => {
           e.preventDefault();
-          dz.classList.remove("border-blue-500");
+          dragDepth = 0;
+          hideDrop();
           if (e.dataTransfer.files.length > 0)
             processFileHandle(e.dataTransfer.files[0]);
         });
-        dz.addEventListener("click", () =>
-          document.getElementById("file-input").click(),
-        );
         document
           .getElementById("file-input")
           .addEventListener("change", (e) => {
