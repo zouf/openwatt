@@ -2,13 +2,48 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="format-detection" content="telephone=no" />
     <title>OpenWatt — ERG/SIM Trainer Cockpit</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+      html,
+      body {
+        overscroll-behavior: none;
+      }
       body {
         background-color: #0f172a;
         color: #f8fafc;
         font-family: "Space Grotesk", system-ui, sans-serif;
+        -webkit-tap-highlight-color: transparent;
+      }
+      button,
+      select,
+      input {
+        touch-action: manipulation;
+      }
+      /* iOS zooms the page when a focused field is under 16px. */
+      @media (max-width: 767px) {
+        select,
+        input[type="text"],
+        input[type="number"] {
+          font-size: 16px !important;
+        }
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        scrollbar-width: none;
       }
       .zone-z1 {
         color: #94a3b8;
@@ -59,13 +94,13 @@
     />
   </head>
   <body
-    class="bg-black text-slate-200 selection:bg-orange-500/30 font-sans h-screen flex flex-col overflow-hidden"
+    class="bg-black text-slate-200 selection:bg-orange-500/30 font-sans h-[100dvh] flex flex-col overflow-hidden"
   >
-    <div class="w-full h-screen flex flex-col">
+    <div class="w-full h-[100dvh] flex flex-col">
       <header
-        class="flex justify-between items-center px-4 py-2 bg-[#111111] border-b border-[#333]"
+        class="flex flex-wrap md:flex-nowrap justify-between items-center gap-x-4 gap-y-2 px-3 md:px-4 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] md:pt-2 bg-[#111111] border-b border-[#333]"
       >
-        <div class="flex items-center gap-6">
+        <div class="flex items-center gap-4 md:gap-6">
           <h1 class="text-lg font-black tracking-tighter text-white">
             OpenWatt
           </h1>
@@ -96,34 +131,35 @@
           </nav>
         </div>
 
-        <div class="flex items-center gap-4">
-          <div class="flex items-center gap-2">
+        <div
+          class="flex flex-wrap md:flex-nowrap items-center gap-2 md:gap-4 w-full md:w-auto"
+        >
+          <div class="flex items-center gap-2 w-full md:w-auto min-w-0">
             <label
-              class="text-[10px] uppercase font-bold text-slate-500 tracking-widest"
+              class="hidden md:block text-[10px] uppercase font-bold text-slate-500 tracking-widest"
               >Workout:</label
             >
             <select
               id="select-workout"
-              class="bg-[#111] text-white border border-[#333] rounded px-2 py-1 text-xs font-bold focus:outline-none"
+              class="flex-1 md:flex-none min-w-0 bg-[#111] text-white border border-[#333] rounded px-2 py-1.5 md:py-1 text-xs font-bold focus:outline-none"
             ></select>
-            <input
-              type="file"
-              id="file-input"
-              class="hidden"
-              accept=".zwo,.erg,.mrc"
-            />
+            <!-- No accept filter: iOS greys out .zwo/.erg/.mrc files it doesn't recognise. -->
+            <input type="file" id="file-input" class="hidden" />
             <button
               onclick="document.getElementById('file-input').click()"
-              class="bg-[#333] hover:bg-[#444] px-2 py-1 text-[10px] uppercase tracking-widest font-bold rounded text-white transition"
+              class="shrink-0 bg-[#333] hover:bg-[#444] px-3 md:px-2 py-2 md:py-1 text-[10px] uppercase tracking-widest font-bold rounded text-white transition"
             >
               Upload File
             </button>
           </div>
-          <div class="w-px h-6 bg-[#333]"></div>
-          <div id="profile-chips" class="flex gap-2 text-xs"></div>
+          <div class="hidden md:block w-px h-6 bg-[#333]"></div>
+          <div
+            id="profile-chips"
+            class="flex gap-2 text-xs flex-1 md:flex-none min-w-0 overflow-x-auto no-scrollbar"
+          ></div>
           <button
             id="btn-add-profile"
-            class="bg-[#333] hover:bg-[#444] text-white font-bold text-[10px] uppercase tracking-widest px-2 py-1 rounded transition"
+            class="shrink-0 bg-[#333] hover:bg-[#444] text-white font-bold text-[10px] uppercase tracking-widest px-3 md:px-2 py-2 md:py-1 rounded transition"
           >
             + Profile
           </button>
@@ -134,15 +170,15 @@
         <!-- TAB: WORKOUT (TrainerRoad Replica) -->
         <section
           id="tab-workout"
-          class="flex-1 flex flex-col w-full h-full block absolute inset-0"
+          class="flex-1 flex flex-col w-full h-full block absolute inset-0 overflow-y-auto md:overflow-hidden"
         >
-          <!-- Top Radial Dashboard -->
+          <!-- Top Radial Dashboard (phone: dial on top, two metric cards below) -->
           <div
-            class="flex items-center justify-between w-full px-12 pt-8 pb-4 h-[40%] min-h-[350px]"
+            class="flex flex-wrap md:flex-nowrap items-center justify-between gap-3 md:gap-0 w-full px-3 md:px-12 pt-4 md:pt-8 pb-3 md:pb-4 md:h-[40%] md:min-h-[350px]"
           >
             <!-- LEFT METRICS -->
             <div
-              class="flex flex-col items-start justify-center space-y-6 w-1/4 bg-[#111] p-6 rounded-2xl border border-[#333]"
+              class="flex flex-col items-start justify-center space-y-3 md:space-y-6 w-[calc(50%-0.375rem)] md:w-1/4 bg-[#111] p-4 md:p-6 rounded-2xl border border-[#333]"
             >
               <div class="w-full">
                 <div
@@ -152,12 +188,12 @@
                 </div>
                 <div
                   id="time-block"
-                  class="text-5xl leading-none font-black text-white tracking-tighter"
+                  class="text-[28px] md:text-5xl leading-none font-black text-white tracking-tighter"
                 >
                   00:00
                 </div>
               </div>
-              <div class="w-full pt-4 border-t border-[#333]">
+              <div class="w-full pt-3 md:pt-4 border-t border-[#333]">
                 <div
                   class="text-[10px] font-black tracking-widest text-[#888] uppercase mb-1"
                 >
@@ -165,7 +201,7 @@
                 </div>
                 <div
                   id="time-elapsed"
-                  class="text-4xl leading-none font-black text-[#ccc] tracking-tighter"
+                  class="text-[22px] md:text-4xl leading-none font-black text-[#ccc] tracking-tighter"
                 >
                   0:00:00
                 </div>
@@ -175,13 +211,14 @@
 
             <!-- CENTER HERO RADIAL -->
             <div
-              class="flex flex-col items-center justify-center w-2/4 relative mt-4"
+              class="order-first md:order-none flex flex-col items-center justify-center w-full md:w-2/4 relative mt-0 md:mt-4 mb-8 md:mb-0"
             >
               <div
-                class="relative flex items-center justify-center w-[280px] h-[280px]"
+                class="relative flex items-center justify-center w-[230px] h-[230px] md:w-[280px] md:h-[280px]"
               >
                 <!-- Target Arc Background (Grey) -->
                 <svg
+                  viewBox="0 0 280 280"
                   class="absolute inset-0 w-full h-full -rotate-90 drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]"
                 >
                   <circle
@@ -242,7 +279,7 @@
                   </div>
                   <div
                     id="val-power"
-                    class="text-[85px] leading-none font-black text-white tracking-tighter drop-shadow-[0_0_20px_rgba(234,88,12,0.3)]"
+                    class="text-[68px] md:text-[85px] leading-none font-black text-white tracking-tighter drop-shadow-[0_0_20px_rgba(234,88,12,0.3)]"
                   >
                     0
                   </div>
@@ -303,7 +340,7 @@
 
             <!-- RIGHT METRICS -->
             <div
-              class="flex flex-col items-end justify-center space-y-6 w-1/4 bg-[#111] p-6 rounded-2xl border border-[#333]"
+              class="flex flex-col items-end justify-center space-y-3 md:space-y-6 w-[calc(50%-0.375rem)] md:w-1/4 bg-[#111] p-4 md:p-6 rounded-2xl border border-[#333]"
             >
               <div class="w-full text-right">
                 <div
@@ -313,12 +350,12 @@
                 </div>
                 <div
                   id="val-hr"
-                  class="text-5xl leading-none font-black text-white tracking-tighter text-red-500"
+                  class="text-[28px] md:text-5xl leading-none font-black tracking-tighter text-red-500"
                 >
                   0
                 </div>
               </div>
-              <div class="w-full text-right pt-4 border-t border-[#333]">
+              <div class="w-full text-right pt-3 md:pt-4 border-t border-[#333]">
                 <div
                   class="text-[10px] font-black tracking-widest text-[#888] uppercase mb-1"
                 >
@@ -326,7 +363,7 @@
                 </div>
                 <div
                   id="val-cadence"
-                  class="text-5xl leading-none font-black text-[#ccc] tracking-tighter"
+                  class="text-[22px] md:text-5xl leading-none font-black text-[#ccc] tracking-tighter"
                 >
                   0
                 </div>
@@ -335,16 +372,20 @@
           </div>
           <!-- Middle: Stats Bar & Full Bleed Chart -->
           <div
-            class="flex-1 w-full flex flex-col relative bg-[#050505] border-t border-[#333]"
+            class="flex-1 min-h-[200px] w-full flex flex-col relative bg-[#050505] border-t border-[#333]"
           >
             <!-- Stats Bar -->
             <div
-              class="w-full flex justify-between items-center px-4 py-2 border-b border-[#333] text-[9px] font-bold text-[#888888] uppercase tracking-[0.2em] bg-[#111111]"
+              class="w-full flex justify-between items-center px-3 md:px-4 py-2 border-b border-[#333] text-[8px] md:text-[9px] font-bold text-[#888888] uppercase tracking-normal md:tracking-[0.2em] bg-[#111111]"
             >
-              <div class="text-lg leading-none cursor-pointer hover:text-white">
+              <div
+                class="hidden md:block text-lg leading-none cursor-pointer hover:text-white"
+              >
                 ≡
               </div>
-              <div class="flex gap-12">
+              <div
+                class="flex w-full md:w-auto justify-between md:justify-start gap-1 md:gap-12"
+              >
                 <div class="text-center">
                   <div
                     id="stat-int-pow"
@@ -409,11 +450,15 @@
                   <div>AVG POW</div>
                 </div>
               </div>
-              <div class="cursor-pointer hover:text-white">STATS ∧</div>
+              <div class="hidden md:block cursor-pointer hover:text-white">
+                STATS ∧
+              </div>
             </div>
 
             <!-- Charts -->
-            <div class="relative flex-1 w-full overflow-hidden mt-8">
+            <div
+              class="relative flex-1 min-h-[150px] w-full overflow-hidden mt-2 md:mt-8"
+            >
               <div id="indicator-target-strip" class="hidden"></div>
               <div id="indicator-power-strip" class="hidden"></div>
               <!-- Huge canvas taking up bottom half completely -->
@@ -434,17 +479,19 @@
 
           <!-- Bottom Footer Bar -->
           <div
-            class="h-14 w-full bg-[#111111] border-t border-[#333] flex justify-between items-center px-4"
+            class="sticky bottom-0 z-10 md:h-14 w-full bg-[#111111] border-t border-[#333] flex flex-wrap md:flex-nowrap justify-between items-center gap-2 px-3 md:px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:py-0"
           >
             <!-- Intensity Control -->
             <div
               class="flex items-center gap-1 bg-[#111] px-1 py-1 rounded border border-[#333]"
+              title="Intensity bias"
             >
               <button
                 id="btn-bias-down"
-                class="text-[#888] hover:text-white px-2 text-xs font-bold"
+                aria-label="Lower intensity"
+                class="text-[#888] hover:text-white px-3 md:px-2 py-1 md:py-0 text-sm md:text-xs font-bold"
               >
-                v
+                −
               </button>
               <span
                 id="label-bias"
@@ -453,9 +500,10 @@
               >
               <button
                 id="btn-bias-up"
-                class="text-[#888] hover:text-white px-2 text-xs font-bold"
+                aria-label="Raise intensity"
+                class="text-[#888] hover:text-white px-3 md:px-2 py-1 md:py-0 text-sm md:text-xs font-bold"
               >
-                ^
+                +
               </button>
               <input
                 id="slider-bias"
@@ -469,52 +517,62 @@
             </div>
 
             <!-- Device Status -->
-            <div class="flex items-center gap-4">
-              <div
+            <div
+              class="flex items-center justify-end gap-2 md:gap-4 min-w-0 flex-1 md:flex-none"
+            >
+              <button
                 id="status-trainer"
-                class="bg-[#111] text-[#888] border border-[#333] px-3 py-1 rounded text-[10px] font-bold tracking-widest uppercase flex items-center gap-2"
+                onclick="switchTab('devices')"
+                class="min-w-0 truncate bg-[#111] text-[#888] border border-[#333] px-2 md:px-3 py-1 rounded text-[9px] md:text-[10px] font-bold tracking-widest uppercase flex items-center gap-2"
               >
-                <div class="w-2 h-2 rounded-full bg-[#555]"></div>
-                Trainer: Offline
-              </div>
-              <div
+                <span class="w-2 h-2 shrink-0 rounded-full bg-[#555]"></span
+                ><span class="truncate">No trainer</span>
+              </button>
+              <button
                 id="status-hr"
-                class="bg-[#111] text-[#888] border border-[#333] px-3 py-1 rounded text-[10px] font-bold tracking-widest uppercase flex items-center gap-2"
+                onclick="switchTab('devices')"
+                class="min-w-0 truncate bg-[#111] text-[#888] border border-[#333] px-2 md:px-3 py-1 rounded text-[9px] md:text-[10px] font-bold tracking-widest uppercase flex items-center gap-2"
               >
-                <div class="w-2 h-2 rounded-full bg-[#555]"></div>
-                HR: Offline
-              </div>
+                <span class="w-2 h-2 shrink-0 rounded-full bg-[#555]"></span
+                ><span class="truncate">No HR</span>
+              </button>
             </div>
 
             <!-- Controls -->
-            <div class="flex gap-2">
+            <div class="flex gap-1.5 md:gap-2 w-full md:w-auto">
               <button
                 id="btn-seg-restart"
-                class="bg-[#333] hover:bg-[#444] text-white font-bold py-1.5 px-3 rounded text-[10px] tracking-widest uppercase transition"
+                class="whitespace-nowrap flex-1 md:flex-none bg-[#333] hover:bg-[#444] text-white font-bold py-3 md:py-1.5 px-1 md:px-3 rounded text-[10px] tracking-wide md:tracking-widest uppercase transition"
               >
                 Restart
               </button>
               <button
                 id="btn-seg-minus"
-                class="bg-[#333] hover:bg-[#444] text-white font-bold py-1.5 px-3 rounded text-[10px] tracking-widest uppercase transition"
+                class="whitespace-nowrap flex-1 md:flex-none bg-[#333] hover:bg-[#444] text-white font-bold py-3 md:py-1.5 px-1 md:px-3 rounded text-[10px] tracking-wide md:tracking-widest uppercase transition"
               >
-                - 30s
+                −30s
               </button>
               <button
                 id="btn-seg-plus"
-                class="bg-[#333] hover:bg-[#444] text-white font-bold py-1.5 px-3 rounded text-[10px] tracking-widest uppercase transition"
+                class="whitespace-nowrap flex-1 md:flex-none bg-[#333] hover:bg-[#444] text-white font-bold py-3 md:py-1.5 px-1 md:px-3 rounded text-[10px] tracking-wide md:tracking-widest uppercase transition"
               >
-                + 30s
+                +30s
               </button>
               <button
                 id="btn-seg-skip"
-                class="bg-[#333] hover:bg-[#444] text-white font-bold py-1.5 px-3 rounded text-[10px] tracking-widest uppercase transition"
+                class="whitespace-nowrap flex-1 md:flex-none bg-[#333] hover:bg-[#444] text-white font-bold py-3 md:py-1.5 px-1 md:px-3 rounded text-[10px] tracking-wide md:tracking-widest uppercase transition"
               >
                 Skip
               </button>
               <button
+                id="btn-end"
+                class="whitespace-nowrap hidden flex-1 md:flex-none bg-[#333] hover:bg-red-700 text-red-400 hover:text-white font-bold py-3 md:py-1.5 px-1 md:px-3 rounded text-[10px] tracking-wide md:tracking-widest uppercase transition"
+              >
+                End
+              </button>
+              <button
                 id="btn-engine-control"
-                class="bg-orange-600 hover:bg-orange-500 text-white font-bold py-1.5 px-6 rounded text-xs tracking-widest transition uppercase ml-2"
+                class="whitespace-nowrap flex-[1.6] md:flex-none bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 md:py-1.5 px-4 md:px-6 rounded text-xs tracking-widest transition uppercase md:ml-2"
               >
                 Start
               </button>
@@ -525,16 +583,33 @@
         <!-- TAB: DEVICES -->
         <section
           id="tab-devices"
-          class="hidden w-full h-full absolute inset-0 overflow-y-auto p-8 bg-black"
+          class="hidden w-full h-full absolute inset-0 overflow-y-auto p-4 md:p-8 pb-[max(2rem,env(safe-area-inset-bottom))] bg-black"
         >
-          <div class="max-w-3xl mx-auto space-y-8">
+          <div class="max-w-3xl mx-auto space-y-4 md:space-y-8">
             <div
-              class="bg-[#111111] p-6 rounded-xl border border-[#333] space-y-6"
+              id="ble-notice"
+              class="hidden bg-orange-950/40 border border-orange-700/60 text-orange-100 p-4 rounded-xl text-sm leading-relaxed"
+            >
+              <div class="font-bold text-orange-300 mb-1">
+                Bluetooth isn't available in this browser
+              </div>
+              On iPhone or iPad, open this page in the free
+              <a
+                class="underline text-orange-300"
+                href="https://apps.apple.com/app/id1492822055"
+                >Bluefy</a
+              >
+              browser (Safari and Chrome on iOS can't talk to trainers). On a
+              computer, use Chrome or Edge. Until then you can try everything in
+              demo mode.
+            </div>
+            <div
+              class="bg-[#111111] p-4 md:p-6 rounded-xl border border-[#333] space-y-4 md:space-y-6"
             >
               <h2 class="text-xl font-bold tracking-tighter text-white">
                 Hardware Connectivity
               </h2>
-              <div class="grid grid-cols-2 gap-4">
+              <div class="grid grid-cols-2 gap-3 md:gap-4">
                 <button
                   id="btn-connect-trainer"
                   class="bg-orange-600 hover:bg-orange-500 text-white font-bold tracking-widest uppercase py-3 rounded-lg text-xs transition"
@@ -548,10 +623,14 @@
                   Connect HR Strap
                 </button>
               </div>
+              <div
+                id="wake-status"
+                class="text-[11px] text-[#777] leading-relaxed"
+              ></div>
             </div>
 
             <div
-              class="bg-[#111111] p-6 rounded-xl border border-[#333] space-y-6"
+              class="bg-[#111111] p-4 md:p-6 rounded-xl border border-[#333] space-y-4 md:space-y-6"
             >
               <div class="flex justify-between items-center">
                 <h2 class="text-xl font-bold tracking-tighter text-white">
@@ -603,11 +682,55 @@
         <!-- TAB: PROFILE -->
         <section
           id="tab-profile"
-          class="hidden w-full h-full absolute inset-0 overflow-y-auto p-8 bg-black"
+          class="hidden w-full h-full absolute inset-0 overflow-y-auto p-4 md:p-8 pb-[max(2rem,env(safe-area-inset-bottom))] bg-black"
         >
-          <div class="max-w-xl mx-auto space-y-8">
+          <div class="max-w-xl mx-auto space-y-4 md:space-y-8">
             <div
-              class="bg-[#111111] p-6 rounded-xl border border-[#333] space-y-6"
+              class="bg-[#111111] p-4 md:p-6 rounded-xl border border-[#333] space-y-4"
+            >
+              <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold tracking-tighter text-white">
+                  Riders
+                </h2>
+                <button
+                  id="btn-add-rider"
+                  class="bg-[#333] hover:bg-[#444] text-white font-bold text-[10px] uppercase tracking-widest px-3 py-2 rounded transition"
+                >
+                  + Add Rider
+                </button>
+              </div>
+              <div id="rider-list" class="space-y-2"></div>
+              <p class="text-[11px] text-[#666] leading-relaxed">
+                FTP drives every workout target. Tap a rider to make them active.
+                Changes save on this device.
+              </p>
+            </div>
+
+            <div
+              class="bg-[#111111] p-4 md:p-6 rounded-xl border border-[#333] space-y-3"
+            >
+              <h2 class="text-xl font-bold tracking-tighter text-white">
+                Last Ride
+              </h2>
+              <div id="last-ride-info" class="text-xs text-[#888]">
+                No ride saved yet.
+              </div>
+              <button
+                id="btn-export-last"
+                class="w-full bg-orange-600 hover:bg-orange-500 disabled:opacity-40 text-white font-bold tracking-widest uppercase py-3 rounded-lg text-xs transition"
+              >
+                Export .TCX
+              </button>
+              <p class="text-[11px] text-[#666] leading-relaxed">
+                Rides are saved here as you go, so a dropped connection or
+                closed tab doesn't lose them. On iPhone, Export opens the share
+                sheet: save to Files, or AirDrop it to your computer for
+                TrainingPeaks.
+              </p>
+            </div>
+
+            <div
+              class="bg-[#111111] p-4 md:p-6 rounded-xl border border-[#333] space-y-6"
             >
               <div class="flex justify-between items-center">
                 <h2 class="text-xl font-bold tracking-tighter text-white">
@@ -697,6 +820,136 @@
           .getElementById("nav-" + tabId)
           .classList.add("text-orange-500");
       }
+
+      /**
+       * Platform helpers (Bluetooth compatibility, wake lock, toasts)
+       */
+      // Full 128-bit UUIDs work in every Web Bluetooth implementation,
+      // including Bluefy on iOS, where 16-bit numeric aliases are unreliable.
+      const uuid16 = (n) =>
+        `0000${n.toString(16).padStart(4, "0")}-0000-1000-8000-00805f9b34fb`;
+      const UUID = {
+        FTMS: uuid16(0x1826),
+        INDOOR_BIKE_DATA: uuid16(0x2ad2),
+        FTMS_CONTROL: uuid16(0x2ad9),
+        CYCLING_POWER: uuid16(0x1818),
+        HR: uuid16(0x180d),
+        HR_MEASUREMENT: uuid16(0x2a37),
+      };
+      const WAHOO_SERVICE_UUIDS = [
+        "a026ee0d-0a7d-4ab3-97fa-f1500f9feb8b",
+        "a026ee01-0a7d-4ab3-97fa-f1500f9feb8b",
+        "a026ee0b-0a7d-4ab3-97fa-f1500f9feb8b",
+      ];
+      const IS_IOS =
+        /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+      function hasBluetooth() {
+        return !!(navigator.bluetooth && navigator.bluetooth.requestDevice);
+      }
+
+      // Older Web Bluetooth builds (including some iOS wrappers) only expose
+      // writeValue().
+      function bleWrite(char, data) {
+        if (typeof char.writeValueWithResponse === "function")
+          return char.writeValueWithResponse(data);
+        return char.writeValue(data);
+      }
+
+      function setStatusPill(id, color, text) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const dot = {
+          green:
+            "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]",
+          amber: "bg-amber-400 animate-pulse",
+          red: "bg-red-600",
+          grey: "bg-[#555]",
+        }[color];
+        el.innerHTML = `<span class="w-2 h-2 shrink-0 rounded-full ${dot}"></span><span class="truncate"></span>`;
+        el.lastChild.textContent = text;
+      }
+
+      let toastTimer = null;
+      function toast(msg, opts = {}) {
+        const box = document.getElementById("toast");
+        if (!box) return;
+        document.getElementById("toast-msg").textContent = msg;
+        const act = document.getElementById("toast-action");
+        if (opts.actionLabel && opts.onAction) {
+          act.textContent = opts.actionLabel;
+          act.onclick = () => {
+            opts.onAction();
+            if (!opts.keepOnAction) box.classList.add("hidden");
+          };
+          act.classList.remove("hidden");
+        } else {
+          act.classList.add("hidden");
+          act.onclick = null;
+        }
+        document.getElementById("toast-close").onclick = () =>
+          box.classList.add("hidden");
+        box.classList.remove("hidden");
+        clearTimeout(toastTimer);
+        if (!opts.sticky)
+          toastTimer = setTimeout(
+            () => box.classList.add("hidden"),
+            opts.duration || 5000,
+          );
+      }
+
+      // Keep the phone screen on during a ride so iOS doesn't sleep and
+      // suspend the page (which would stop ERG updates).
+      let wakeLock = null;
+      let wakeWarned = false;
+      async function requestWakeLock() {
+        if (!("wakeLock" in navigator)) {
+          updateWakeStatus();
+          if (IS_IOS && !wakeWarned) {
+            wakeWarned = true;
+            toast(
+              "This browser can't keep the screen on. Set Settings › Display › Auto-Lock to Never while you ride.",
+              { duration: 9000 },
+            );
+          }
+          return;
+        }
+        if (wakeLock) return;
+        try {
+          wakeLock = await navigator.wakeLock.request("screen");
+          wakeLock.addEventListener("release", () => {
+            wakeLock = null;
+            updateWakeStatus();
+          });
+        } catch (e) {
+          console.warn("Wake lock failed", e);
+        }
+        updateWakeStatus();
+      }
+      function releaseWakeLock() {
+        if (wakeLock) wakeLock.release().catch(() => {});
+        wakeLock = null;
+        updateWakeStatus();
+      }
+      function updateWakeStatus() {
+        const el = document.getElementById("wake-status");
+        if (!el) return;
+        if (!("wakeLock" in navigator))
+          el.textContent =
+            "Screen keep-awake isn't supported here. Turn off Auto-Lock while riding so the phone doesn't sleep mid-workout.";
+        else
+          el.textContent = wakeLock
+            ? "Screen will stay on while you ride."
+            : "Screen will stay on once you start a ride.";
+      }
+      document.addEventListener("visibilitychange", () => {
+        if (
+          document.visibilityState === "visible" &&
+          (state.runState === "RUNNING" || state.runState === "PAUSED")
+        )
+          requestWakeLock();
+      });
 
       const WORKOUT_PRESETS = [
         {
@@ -871,8 +1124,23 @@
           ],
           lastPayload: [],
         },
-        ble: { trainer: null, hr: null, txChar: null, lastCommandTime: 0 },
+        ble: {
+          trainer: null,
+          hr: null,
+          txChar: null,
+          lastCommandTime: 0,
+          trainerDevice: null, // set once a real trainer has been chosen
+          hrDevice: null,
+          writeQueue: Promise.resolve(),
+          lastSentTarget: -1,
+          lastSentAt: 0,
+          wahooChars: [],
+        },
+        rideStartedAt: null,
+        lastRideSavedAt: 0,
       };
+
+      const RIDE_KEY = "openwatt_ride_v1";
 
       /**
        * Initialization & LocalStorage Pipelines
@@ -881,33 +1149,66 @@
         loadStorage();
         buildUIElements();
         bindInputEvents();
+        syncBiasUI();
         processActiveWorkoutTimeline();
+        if (!hasBluetooth())
+          document.getElementById("ble-notice").classList.remove("hidden");
+        updateWakeStatus();
+        updateLastRideInfo();
         setInterval(tickLoop, 1000);
         requestAnimationFrame(renderTelemetryLoop);
+        window.addEventListener("resize", renderStaticProfiles);
+      }
+
+      // Storage can throw (private mode, quota); never let that break a ride.
+      function storeGet(key) {
+        try {
+          return localStorage.getItem(key);
+        } catch (e) {
+          return null;
+        }
+      }
+      function storeSet(key, val) {
+        try {
+          localStorage.setItem(key, val);
+          return true;
+        } catch (e) {
+          console.warn("localStorage write failed", key, e);
+          return false;
+        }
       }
 
       function loadStorage() {
-        const p = localStorage.getItem("openwatt_profiles_v2");
-        if (p) state.profiles = JSON.parse(p);
-        const ap = localStorage.getItem("openwatt_active_profile_v2");
-        if (ap) state.activeProfileId = ap;
-        const bc = localStorage.getItem("openwatt_button_config_v3");
-        if (bc) state.buttonConfig = JSON.parse(bc);
+        try {
+          const p = storeGet("openwatt_profiles_v2");
+          if (p) {
+            const parsed = JSON.parse(p);
+            if (Array.isArray(parsed) && parsed.length) state.profiles = parsed;
+          }
+          const ap = storeGet("openwatt_active_profile_v2");
+          if (ap && state.profiles.some((x) => x.id === ap))
+            state.activeProfileId = ap;
+          else state.activeProfileId = state.profiles[0].id;
+          const bc = storeGet("openwatt_button_config_v3");
+          if (bc) state.buttonConfig = JSON.parse(bc);
+        } catch (e) {
+          console.warn("Saved settings unreadable, using defaults", e);
+        }
       }
 
       function saveStorage() {
-        localStorage.setItem(
-          "openwatt_profiles_v2",
-          JSON.stringify(state.profiles),
-        );
-        localStorage.setItem(
-          "openwatt_active_profile_v2",
-          state.activeProfileId,
-        );
-        localStorage.setItem(
+        storeSet("openwatt_profiles_v2", JSON.stringify(state.profiles));
+        storeSet("openwatt_active_profile_v2", state.activeProfileId);
+        storeSet(
           "openwatt_button_config_v3",
           JSON.stringify(state.buttonConfig),
         );
+      }
+
+      function syncBiasUI() {
+        const bias = getActiveProfile().bias || 100;
+        document.getElementById("slider-bias").value = bias;
+        document.getElementById("label-bias").innerText = `${bias}%`;
       }
 
       function getActiveProfile() {
@@ -926,7 +1227,7 @@
         state.profiles.forEach((p) => {
           const isSelected = p.id === state.activeProfileId;
           const chip = document.createElement("div");
-          chip.className = `flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-semibold cursor-pointer transition ${
+          chip.className = `shrink-0 whitespace-nowrap flex items-center gap-2 px-3 py-1.5 md:py-1 rounded-full border text-xs font-semibold cursor-pointer transition ${
             isSelected
               ? "bg-orange-600 border-orange-500 text-white shadow-md"
               : "bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600"
@@ -937,19 +1238,12 @@
           labelStr.addEventListener("click", () => selectProfile(p.id));
           chip.appendChild(labelStr);
 
-          if (state.profiles.length > 1) {
-            const delBtn = document.createElement("span");
-            delBtn.innerHTML = "&times;";
-            delBtn.className =
-              "text-sm font-bold text-slate-400 hover:text-white pl-1 border-l border-slate-500/40 ml-1";
-            delBtn.addEventListener("click", (e) => {
-              e.stopPropagation();
-              removeProfile(p.id);
-            });
-            chip.appendChild(delBtn);
-          }
+          // Deleting riders lives in Profile > Riders, not on a chip you can
+          // fat-finger mid-ride.
           chipContainer.appendChild(chip);
         });
+
+        renderRiderList();
 
         const selectWk = document.getElementById("select-workout");
         selectWk.innerHTML = "";
@@ -1088,23 +1382,88 @@
        */
       function selectProfile(id) {
         state.activeProfileId = id;
-        const active = getActiveProfile();
-        document.getElementById("slider-bias").value = active.bias || 100;
+        saveStorage();
+        syncBiasUI();
         buildUIElements();
         renderStaticProfiles();
       }
 
-      function addProfile() {
-        const name = prompt("Enter profile name:");
-        if (!name) return;
-        const ftp = parseInt(prompt("Enter FTP (Watts):"), 10);
-        if (!ftp || isNaN(ftp)) return;
+      // Inline rider editor (no prompt() dialogs, which some iOS browsers block).
+      function renderRiderList() {
+        const list = document.getElementById("rider-list");
+        if (!list) return;
+        list.innerHTML = "";
+        state.profiles.forEach((p) => {
+          const active = p.id === state.activeProfileId;
+          const row = document.createElement("div");
+          row.className = `flex items-center gap-2 p-2 rounded-lg border ${
+            active
+              ? "border-orange-600 bg-orange-950/30"
+              : "border-[#333] bg-[#0a0a0a]"
+          }`;
+          row.innerHTML = `
+            <button class="rider-pick shrink-0 w-5 h-5 rounded-full border-2 ${
+              active ? "border-orange-500 bg-orange-500" : "border-[#555]"
+            }" aria-label="Make active rider"></button>
+            <input class="rider-name flex-1 min-w-0 bg-transparent border border-[#333] rounded px-2 py-1.5 text-sm text-white" type="text" maxlength="24" />
+            <div class="flex items-center gap-1 shrink-0">
+              <input class="rider-ftp w-[72px] bg-transparent border border-[#333] rounded px-2 py-1.5 text-sm text-white text-right" type="number" inputmode="numeric" min="50" max="600" />
+              <span class="text-[10px] font-bold text-[#888]">W</span>
+            </div>
+            <button class="rider-del shrink-0 text-[#666] hover:text-red-400 px-2 text-lg leading-none ${
+              state.profiles.length > 1 ? "" : "invisible"
+            }" aria-label="Delete rider">&times;</button>`;
+          const nameIn = row.querySelector(".rider-name");
+          const ftpIn = row.querySelector(".rider-ftp");
+          nameIn.value = p.name;
+          ftpIn.value = p.ftp;
+          nameIn.addEventListener("change", () => {
+            p.name = nameIn.value.trim() || p.name;
+            saveStorage();
+            buildUIElements();
+          });
+          ftpIn.addEventListener("change", () => {
+            const v = parseInt(ftpIn.value, 10);
+            if (v >= 50 && v <= 600) {
+              p.ftp = v;
+              saveStorage();
+              buildUIElements();
+              renderStaticProfiles();
+            } else {
+              ftpIn.value = p.ftp;
+              toast("FTP should be between 50 and 600 W.");
+            }
+          });
+          row
+            .querySelector(".rider-pick")
+            .addEventListener("click", () => selectProfile(p.id));
+          row
+            .querySelector(".rider-del")
+            .addEventListener("click", () => removeProfile(p.id));
+          list.appendChild(row);
+        });
+      }
 
-        const newId = "prof_" + Math.random().toString(36).substr(2, 9);
-        state.profiles.push({ id: newId, name: name, ftp: ftp, bias: 100 });
+      function addProfile() {
+        const newId = "prof_" + Math.random().toString(36).slice(2, 11);
+        state.profiles.push({
+          id: newId,
+          name: `Rider ${state.profiles.length + 1}`,
+          ftp: 250,
+          bias: 100,
+        });
         state.activeProfileId = newId;
         saveStorage();
+        syncBiasUI();
         buildUIElements();
+        renderStaticProfiles();
+        switchTab("profile");
+        const inputs = document.querySelectorAll("#rider-list .rider-name");
+        const last = inputs[inputs.length - 1];
+        if (last) {
+          last.focus();
+          last.select();
+        }
       }
 
       function removeProfile(id) {
@@ -1113,7 +1472,9 @@
         if (state.activeProfileId === id)
           state.activeProfileId = state.profiles[0].id;
         saveStorage();
+        syncBiasUI();
         buildUIElements();
+        renderStaticProfiles();
       }
 
       function mutateSection(action) {
@@ -1151,142 +1512,279 @@
        * Web Bluetooth GATT Integration Engine
        */
       async function connectTrainerGATT() {
+        if (!hasBluetooth()) {
+          document.getElementById("ble-notice").classList.remove("hidden");
+          toast(
+            IS_IOS
+              ? "Open this page in the Bluefy app to connect your trainer."
+              : "Bluetooth needs Chrome or Edge on a computer.",
+          );
+          return;
+        }
+        let device;
         try {
-          // Request FTMS ($0x1826) alongside Wahoo's Proprietary Shift Feature Block Service
-          const device = await navigator.bluetooth.requestDevice({
-            filters: [{ services: [0x1826] }],
-            optionalServices: [
-              "a026ee0d-0a7d-4ab3-97fa-f1500f9feb8b",
-              "a026ee01-0a7d-4ab3-97fa-f1500f9feb8b",
-              "a026ee0b-0a7d-4ab3-97fa-f1500f9feb8b",
-              0x1818, // standard cycling power
-            ],
+          // FTMS trainers, plus Wahoo's proprietary services for KICKR Bike buttons.
+          device = await navigator.bluetooth.requestDevice({
+            filters: [{ services: [UUID.FTMS] }],
+            optionalServices: [...WAHOO_SERVICE_UUIDS, UUID.CYCLING_POWER],
           });
+        } catch (e) {
+          // User cancelled the picker, or nothing was found.
+          if (!state.ble.trainer)
+            setStatusPill(
+              "status-trainer",
+              e.name === "NotFoundError" ? "grey" : "red",
+              e.name === "NotFoundError" ? "No trainer" : `Trainer: ${e.message}`,
+            );
+          return;
+        }
 
-          document.getElementById("status-trainer").innerHTML =
-            `<div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>Connecting...`;
+        // Switching to a different trainer: forget the old one.
+        if (state.ble.trainerDevice && state.ble.trainerDevice !== device) {
+          state.ble.trainerDevice.removeEventListener(
+            "gattserverdisconnected",
+            onTrainerDisconnected,
+          );
+          try {
+            state.ble.trainerDevice.gatt.disconnect();
+          } catch (e) {}
+        }
+        state.ble.trainerDevice = device;
+        device.removeEventListener("gattserverdisconnected", onTrainerDisconnected);
+        device.addEventListener("gattserverdisconnected", onTrainerDisconnected);
+        state.ble.reconnectAttempts = 0;
+        await setupTrainer(device);
+      }
+
+      // Connects GATT and (re)subscribes. Used for first connect and reconnects.
+      async function setupTrainer(device) {
+        setStatusPill("status-trainer", "amber", "Connecting…");
+        try {
           const server = await device.gatt.connect();
-          state.ble.trainer = server;
+          logEvent(`Connected to: ${device.name || "trainer"}`);
 
-          logEvent(`Connected to: ${device.name}`);
-
-          // Discover services to help debugging
           try {
             const services = await server.getPrimaryServices();
-            const svcList = services
-              .map((s) => s.uuid.split("-")[0])
-              .join(", ");
-            logEvent(`Discovered Services: ${svcList}`);
+            logEvent(
+              `Discovered Services: ${services
+                .map((s) => s.uuid.split("-")[0])
+                .join(", ")}`,
+            );
           } catch (e) {
             console.warn("Service enumeration failed", e);
           }
 
-          const ftms = await server.getPrimaryService(0x1826);
-          const dataChar = await ftms.getCharacteristic(0x2ad2);
-          await dataChar.startNotifications();
+          const ftms = await server.getPrimaryService(UUID.FTMS);
+          const dataChar = await ftms.getCharacteristic(UUID.INDOOR_BIKE_DATA);
+          dataChar.removeEventListener(
+            "characteristicvaluechanged",
+            handleTrainerDataPayload,
+          );
           dataChar.addEventListener(
             "characteristicvaluechanged",
             handleTrainerDataPayload,
           );
+          await dataChar.startNotifications();
 
-          state.ble.txChar = await ftms.getCharacteristic(0x2ad9);
-          await state.ble.txChar.startNotifications();
+          const cp = await ftms.getCharacteristic(UUID.FTMS_CONTROL);
+          try {
+            await cp.startNotifications(); // control point indications
+          } catch (e) {
+            console.warn("Control point indications unavailable", e);
+          }
+          state.ble.txChar = cp;
+          state.ble.trainer = server;
+          state.ble.reconnectAttempts = 0;
 
-          // Request structural control authorization sequence
+          // Request control, then start/resume.
           await sendControlOpcode(new Uint8Array([0x00]));
           await sendControlOpcode(new Uint8Array([0x07]));
 
-          document.getElementById("status-trainer").innerHTML =
-            `<div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>${device.name}`;
+          setStatusPill("status-trainer", "green", device.name || "Trainer");
 
-          // Dynamically subscribe to all characteristics in Wahoo custom services
-          const wahooServiceUUIDs = [
-            "a026ee0d-0a7d-4ab3-97fa-f1500f9feb8b",
-            "a026ee01-0a7d-4ab3-97fa-f1500f9feb8b",
-            "a026ee0b-0a7d-4ab3-97fa-f1500f9feb8b",
-          ];
+          // Re-assert the current target straight away after a (re)connect.
+          state.ble.lastSentTarget = -1;
+          if (state.mode === "SIM") assertHardwareSimulationParameters();
+          else if (state.runState === "RUNNING") sendErgTarget(state.telemetry.target, true);
+
+          // Subscribe to every notifying characteristic in Wahoo's custom services.
+          state.ble.wahooChars = [];
           let subscribedAny = false;
-
-          for (const svcUuid of wahooServiceUUIDs) {
+          for (const svcUuid of WAHOO_SERVICE_UUIDS) {
             try {
               const wahooSvc = await server.getPrimaryService(svcUuid);
               const characteristics = await wahooSvc.getCharacteristics();
               for (const char of characteristics) {
-                if (char.properties.notify || char.properties.indicate) {
-                  await char.startNotifications();
-                  char.addEventListener(
-                    "characteristicvaluechanged",
-                    handleWahooButtonPayload,
-                  );
-                  subscribedAny = true;
-                  if (!state.ble.wahooChars) state.ble.wahooChars = [];
-                  state.ble.wahooChars.push(char);
-                  console.log(
-                    `Subscribed to Wahoo characteristic: ${char.uuid}`,
-                  );
+                const props = char.properties || {};
+                if (props.notify || props.indicate || !char.properties) {
+                  try {
+                    char.removeEventListener(
+                      "characteristicvaluechanged",
+                      handleWahooButtonPayload,
+                    );
+                    char.addEventListener(
+                      "characteristicvaluechanged",
+                      handleWahooButtonPayload,
+                    );
+                    await char.startNotifications();
+                    subscribedAny = true;
+                    state.ble.wahooChars.push(char);
+                  } catch (e) {
+                    console.warn(`Could not subscribe ${char.uuid}`, e);
+                  }
                 }
               }
             } catch (err) {
               console.warn(`Could not bind to Wahoo service ${svcUuid}`, err);
             }
           }
-
-          if (subscribedAny) {
-            logEvent("Wahoo proprietary streams successfully connected.");
-          } else {
-            logEvent(
-              "Error: No notifying Wahoo characteristics found on this hardware variant.",
-            );
-          }
+          logEvent(
+            subscribedAny
+              ? "Wahoo proprietary streams successfully connected."
+              : "No notifying Wahoo characteristics found on this hardware variant.",
+          );
+          return true;
         } catch (e) {
-          document.getElementById("status-trainer").innerHTML =
-            `<div class="w-2 h-2 rounded-full bg-red-600"></div>GATT FAULT: ${e.message}`;
+          console.error("Trainer setup failed", e);
+          state.ble.trainer = null;
+          state.ble.txChar = null;
+          setStatusPill("status-trainer", "red", `Trainer: ${e.message}`);
+          return false;
         }
+      }
+
+      function onTrainerDisconnected() {
+        state.ble.trainer = null;
+        state.ble.txChar = null;
+        state.telemetry.power = 0;
+        state.telemetry.cadence = 0;
+        state.telemetry.powerHistory = [];
+        logEvent("Trainer disconnected.");
+        scheduleTrainerReconnect();
+      }
+
+      // Retry with backoff: 1s, 2s, 4s ... capped at 10s, for about two minutes.
+      function scheduleTrainerReconnect() {
+        const device = state.ble.trainerDevice;
+        if (!device) return;
+        const n = (state.ble.reconnectAttempts || 0) + 1;
+        state.ble.reconnectAttempts = n;
+        if (n > 15) {
+          setStatusPill("status-trainer", "red", "Trainer lost: tap to reconnect");
+          toast("Lost the trainer. Open Devices and tap Connect Trainer.", {
+            actionLabel: "Devices",
+            onAction: () => switchTab("devices"),
+            sticky: true,
+          });
+          return;
+        }
+        setStatusPill("status-trainer", "amber", `Reconnecting… (${n})`);
+        const delay = Math.min(10000, 1000 * 2 ** (n - 1));
+        setTimeout(async () => {
+          if (state.ble.trainer || state.ble.trainerDevice !== device) return;
+          const ok = await setupTrainer(device);
+          if (ok) toast("Trainer reconnected.");
+          else scheduleTrainerReconnect();
+        }, delay);
+      }
+
+      function handleHrPayload(e) {
+        const val = e.target.value;
+        const flags = val.getUint8(0);
+        state.telemetry.hr =
+          (flags & 1) === 0 ? val.getUint8(1) : val.getUint16(1, true);
       }
 
       async function connectHeartRateGATT() {
+        if (!hasBluetooth()) {
+          document.getElementById("ble-notice").classList.remove("hidden");
+          return;
+        }
+        let device;
         try {
-          const device = await navigator.bluetooth.requestDevice({
-            filters: [{ services: [0x180d] }],
+          device = await navigator.bluetooth.requestDevice({
+            filters: [{ services: [UUID.HR] }],
           });
-          document.getElementById("status-hr").innerText =
-            "Connecting to HR sensor...";
-          const server = await device.gatt.connect();
-          state.ble.hr = server;
-
-          const svc = await server.getPrimaryService(0x180d);
-          const char = await svc.getCharacteristic(0x2a37);
-          await char.startNotifications();
-          char.addEventListener("characteristicvaluechanged", (e) => {
-            const val = e.target.value;
-            let hrValue = 0;
-            const flags = val.getUint8(0);
-            if ((flags & 1) === 0) hrValue = val.getUint8(1);
-            else hrValue = val.getUint16(1, true);
-            state.telemetry.hr = hrValue;
-          });
-          document.getElementById("status-hr").innerText =
-            `Connected HR: ${device.name}`;
         } catch (e) {
-          document.getElementById("status-hr").innerText =
-            `HR GATT Fault: ${e.message}`;
+          return; // picker cancelled
+        }
+        state.ble.hrDevice = device;
+        device.removeEventListener("gattserverdisconnected", onHrDisconnected);
+        device.addEventListener("gattserverdisconnected", onHrDisconnected);
+        state.ble.hrReconnectAttempts = 0;
+        await setupHr(device);
+      }
+
+      async function setupHr(device) {
+        setStatusPill("status-hr", "amber", "HR: connecting…");
+        try {
+          const server = await device.gatt.connect();
+          const svc = await server.getPrimaryService(UUID.HR);
+          const char = await svc.getCharacteristic(UUID.HR_MEASUREMENT);
+          char.removeEventListener("characteristicvaluechanged", handleHrPayload);
+          char.addEventListener("characteristicvaluechanged", handleHrPayload);
+          await char.startNotifications();
+          state.ble.hr = server;
+          state.ble.hrReconnectAttempts = 0;
+          setStatusPill("status-hr", "green", `HR: ${device.name || "strap"}`);
+          return true;
+        } catch (e) {
+          state.ble.hr = null;
+          setStatusPill("status-hr", "red", `HR: ${e.message}`);
+          return false;
         }
       }
 
-      async function sendControlOpcode(payloadArray) {
+      function onHrDisconnected() {
+        state.ble.hr = null;
+        state.telemetry.hr = 0;
+        const device = state.ble.hrDevice;
+        const n = (state.ble.hrReconnectAttempts || 0) + 1;
+        state.ble.hrReconnectAttempts = n;
+        if (!device || n > 10) {
+          setStatusPill("status-hr", "red", "HR: lost");
+          return;
+        }
+        setStatusPill("status-hr", "amber", `HR: reconnecting… (${n})`);
+        setTimeout(async () => {
+          if (state.ble.hr || state.ble.hrDevice !== device) return;
+          if (!(await setupHr(device))) onHrDisconnected();
+        }, Math.min(10000, 1000 * 2 ** (n - 1)));
+      }
+
+      // All control-point writes go through one queue: concurrent GATT writes
+      // fail with "operation already in progress", especially on iOS.
+      function sendControlOpcode(payloadArray) {
+        const run = async () => {
+          const char = state.ble.txChar;
+          if (!char) return;
+          const wait = 250 - (performance.now() - state.ble.lastCommandTime);
+          if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+          try {
+            await bleWrite(char, payloadArray);
+          } catch (e) {
+            console.error("Opcode Write Error:", e);
+          }
+          state.ble.lastCommandTime = performance.now();
+        };
+        state.ble.writeQueue = state.ble.writeQueue.then(run, run);
+        return state.ble.writeQueue;
+      }
+
+      // ERG target: send on change, and re-assert every 3s.
+      function sendErgTarget(watts, force) {
         if (!state.ble.txChar) return;
         const now = performance.now();
-        if (now - state.ble.lastCommandTime < 250) {
-          await new Promise((r) =>
-            setTimeout(r, 250 - (now - state.ble.lastCommandTime)),
-          );
-        }
-        try {
-          await state.ble.txChar.writeValueWithResponse(payloadArray);
-          state.ble.lastCommandTime = performance.now();
-        } catch (e) {
-          console.error("Opcode Write Error:", e);
-        }
+        if (
+          !force &&
+          watts === state.ble.lastSentTarget &&
+          now - state.ble.lastSentAt < 3000
+        )
+          return;
+        state.ble.lastSentTarget = watts;
+        state.ble.lastSentAt = now;
+        const w = Math.max(0, Math.min(2000, Math.round(watts)));
+        sendControlOpcode(new Uint8Array([0x05, w & 0xff, (w >> 8) & 0xff]));
       }
 
       function handleTrainerDataPayload(e) {
@@ -1497,14 +1995,18 @@
        */
       function parseWorkoutFileContent(fileName, textData) {
         try {
+          const lower = fileName.toLowerCase();
+          const looksZwo =
+            lower.endsWith(".zwo") ||
+            (lower.endsWith(".xml") && /<workout_file/i.test(textData));
           let loadedWorkout = {
             id: "imported",
-            name: fileName.split(".")[0],
+            name: fileName.replace(/\.[^.]+$/, ""),
             desc: "Imported File Target",
             blocks: [],
           };
 
-          if (fileName.endsWith(".zwo")) {
+          if (looksZwo) {
             const doc = new DOMParser().parseFromString(
               textData,
               "application/xml",
@@ -1564,10 +2066,10 @@
                 loadedWorkout.blocks.push({ d: d, p: 50 });
               }
             }
-          } else if (fileName.endsWith(".erg") || fileName.endsWith(".mrc")) {
+          } else if (lower.endsWith(".erg") || lower.endsWith(".mrc")) {
             const lines = textData.split("\n");
             let courseDataMode = false;
-            const isMrc = fileName.endsWith(".mrc");
+            const isMrc = lower.endsWith(".mrc");
             let lastTime = 0;
 
             for (let line of lines) {
@@ -1600,10 +2102,17 @@
                 }
               }
             }
+          } else {
+            throw new Error("Use a .zwo, .erg or .mrc workout file.");
           }
 
+          loadedWorkout.blocks = loadedWorkout.blocks.filter(
+            (b) => b.d > 0 && isFinite(b.p),
+          );
           if (loadedWorkout.blocks.length === 0)
             throw new Error("No usable workout segments mapped from file.");
+          if (state.runState !== "STOPPED")
+            throw new Error("Finish or end the current ride before loading a new workout.");
 
           state.activeWorkout = loadedWorkout;
           state.clockTime = 0;
@@ -1611,8 +2120,9 @@
           state.blockTimeElapsed = 0;
           processActiveWorkoutTimeline();
           buildUIElements();
+          toast(`Loaded "${loadedWorkout.name}".`);
         } catch (err) {
-          alert("File Parsing Failed: " + err.message);
+          toast("Couldn't load that file: " + err.message, { duration: 8000 });
         }
       }
 
@@ -1657,23 +2167,33 @@
 
         state.telemetry.target = computedTargetWatts;
 
-        // Hardware vs Simulation Pipeline
-        if (!state.ble.trainer) {
+        // Hardware vs Simulation Pipeline. Demo data only when no trainer has
+        // ever been chosen; a dropped trainer records zeros, never fake watts.
+        if (!state.ble.trainerDevice) {
           const noise = (Math.random() - 0.5) * 6;
-          state.telemetry.power = Math.round(
-            Math.max(0, computedTargetWatts + noise),
-          );
+          const p = Math.round(Math.max(0, computedTargetWatts + noise));
+          state.telemetry.power = p;
           state.telemetry.cadence = 88 + Math.round((Math.random() - 0.5) * 4);
-          state.telemetry.hr =
-            110 + Math.round((computedTargetWatts / activeProfile.ftp) * 50);
-        } else {
-          if (state.mode === "ERG" && state.clockTime % 3 === 0) {
-            const p = new Uint8Array(3);
-            p[0] = 0x05; // Opcode: Set Target Power
-            p[1] = computedTargetWatts & 0xff;
-            p[2] = (computedTargetWatts >> 8) & 0xff;
-            sendControlOpcode(p);
-          }
+          if (!state.ble.hrDevice)
+            state.telemetry.hr =
+              110 + Math.round((computedTargetWatts / activeProfile.ftp) * 50);
+          const now = Date.now();
+          state.telemetry.powerHistory.push({ t: now, v: p });
+          state.telemetry.powerHistory = state.telemetry.powerHistory.filter(
+            (x) => now - x.t <= 10500,
+          );
+          const avgSince = (ms) => {
+            const xs = state.telemetry.powerHistory.filter(
+              (x) => now - x.t <= ms,
+            );
+            return xs.length
+              ? Math.round(xs.reduce((a, b) => a + b.v, 0) / xs.length)
+              : p;
+          };
+          state.telemetry.power3s = avgSince(3000);
+          state.telemetry.power10s = avgSince(10000);
+        } else if (state.mode === "ERG") {
+          sendErgTarget(computedTargetWatts);
         }
 
         state.history.push({
@@ -1691,6 +2211,9 @@
         if (state.trace.length > 180) state.trace.shift();
 
         updateStatsBar();
+
+        // Checkpoint the ride every 30s so nothing is lost if the page dies.
+        if (state.clockTime % 30 === 0) saveRide(false);
       }
 
       /**
@@ -1750,64 +2273,162 @@
         set("stat-kj", kj);
       }
 
+      const ENGINE_BTN_BASE =
+        "whitespace-nowrap flex-[1.6] md:flex-none text-white font-bold py-3 md:py-1.5 px-4 md:px-6 rounded text-xs tracking-widest transition uppercase md:ml-2";
+
+      function setEngineButton(label, danger) {
+        const btn = document.getElementById("btn-engine-control");
+        btn.innerText = label;
+        btn.className = `${ENGINE_BTN_BASE} ${
+          danger
+            ? "bg-red-600 hover:bg-red-500"
+            : "bg-orange-600 hover:bg-orange-500"
+        }`;
+        document
+          .getElementById("btn-end")
+          .classList.toggle("hidden", state.runState !== "PAUSED");
+      }
+
       function toggleEngineExecution() {
         if (state.runState === "STOPPED" || state.runState === "PAUSED") {
+          if (state.runState === "STOPPED") {
+            state.rideStartedAt = Date.now();
+            state.history = [];
+            state.trace = [];
+          }
           state.runState = "RUNNING";
-          document.getElementById("btn-engine-control").innerText = "Pause";
-          document.getElementById("btn-engine-control").className =
-            "bg-red-600 hover:bg-red-500 text-white font-bold py-1.5 px-6 rounded text-xs tracking-widest transition uppercase ml-2";
+          setEngineButton("Pause", true);
+          requestWakeLock();
+          if (state.mode === "SIM") assertHardwareSimulationParameters();
         } else {
           state.runState = "PAUSED";
-          document.getElementById("btn-engine-control").innerText = "Resume";
-          document.getElementById("btn-engine-control").className =
-            "bg-orange-600 hover:bg-orange-500 text-white font-bold py-1.5 px-6 rounded text-xs tracking-widest transition uppercase ml-2";
+          setEngineButton("Resume", false);
+          saveRide(false);
         }
       }
 
       function terminateWorkoutRun() {
+        const hadRide = state.history.length > 5;
         state.runState = "STOPPED";
         // Release the trainer so it stops holding the last ERG target.
         releaseTrainerLoad();
-        document.getElementById("btn-engine-control").innerText = "Start";
-        document.getElementById("btn-engine-control").className =
-          "bg-orange-600 hover:bg-orange-500 text-white font-bold py-1.5 px-6 rounded text-xs tracking-widest transition uppercase ml-2";
-        if (state.history.length > 5) executeDataTcxExportSequence();
+        releaseWakeLock();
+        setEngineButton("Start", false);
+        if (hadRide) {
+          saveRide(true);
+          // Desktop browsers can download straight away; iOS needs a tap
+          // (share sheet), so offer it in a toast either way.
+          if (!IS_IOS) exportLastRide(false);
+          toast("Ride saved.", {
+            actionLabel: "Export .TCX",
+            onAction: () => exportLastRide(true),
+            sticky: true,
+          });
+        }
         state.clockTime = 0;
         state.activeBlockIndex = 0;
         state.blockTimeElapsed = 0;
         state.history = [];
         state.trace = [];
+        state.ble.lastSentTarget = -1;
         updateStatsBar();
       }
 
       /**
-       * DOM Rendering Pipeline
+       * Ride persistence
        */
-      function renderTelemetryLoop() {
+      function saveRide(finished) {
+        if (!state.history.length) return;
+        const ride = {
+          v: 1,
+          startedAt: state.rideStartedAt || Date.now(),
+          finished: !!finished,
+          workout: state.activeWorkout.name,
+          rider: getActiveProfile().name,
+          // compact columns: t, power, target, cadence, hr
+          s: state.history.map((h) => [
+            h.t,
+            h.p,
+            h.tgt,
+            Math.round(h.cad),
+            h.hr,
+          ]),
+        };
+        if (storeSet(RIDE_KEY, JSON.stringify(ride))) {
+          state.lastRideSavedAt = Date.now();
+          updateLastRideInfo();
+        }
+      }
+
+      function loadLastRide() {
+        try {
+          const raw = storeGet(RIDE_KEY);
+          if (!raw) return null;
+          const r = JSON.parse(raw);
+          return r && Array.isArray(r.s) && r.s.length ? r : null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function updateLastRideInfo() {
+        const el = document.getElementById("last-ride-info");
+        const btn = document.getElementById("btn-export-last");
+        if (!el || !btn) return;
+        const r = loadLastRide();
+        btn.disabled = !r;
+        if (!r) {
+          el.textContent = "No ride saved yet.";
+          return;
+        }
+        const secs = r.s.length;
+        const avg = Math.round(r.s.reduce((a, x) => a + x[1], 0) / secs);
+        const when = new Date(r.startedAt).toLocaleString([], {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        });
+        el.textContent = `${r.workout} · ${r.rider} · ${when} · ${formatHHMMSS(
+          secs,
+        )} · ${avg} W avg${r.finished ? "" : " (in progress)"}`;
+      }
+
+      /**
+       * DOM Rendering Pipeline (throttled: readouts change at most a few
+       * times a second, and a phone shouldn't burn battery at 60 fps)
+       */
+      let lastRenderTs = 0;
+      function renderTelemetryLoop(ts) {
         requestAnimationFrame(renderTelemetryLoop);
+        if (ts - lastRenderTs < 200) return;
+        lastRenderTs = ts;
 
         const t = state.telemetry;
         const zoneInfo = calculateZone(t.power);
+        const ftp = getActiveProfile().ftp || 250;
 
         document.getElementById("val-power").innerText = t.power;
-        document.getElementById("zone-power").innerText = zoneInfo.name;
-        document.getElementById("zone-power").style.backgroundColor =
-          zoneInfo.color;
-        document.getElementById("indicator-power-strip").style.backgroundColor =
-          zoneInfo.color;
+        const zEl = document.getElementById("zone-power");
+        zEl.innerText = t.power > 0 ? zoneInfo.name : "";
+        zEl.style.color = zoneInfo.color;
 
         document.getElementById("val-target").innerText =
           state.mode === "ERG" ? t.target : `${state.simGrade.toFixed(1)}%`;
-        document.getElementById("val-target-sub").innerText =
-          state.mode === "ERG"
-            ? "ERG Mode Target Baseline"
-            : "SIM Mode Target Grade";
 
-        const tgtZone = calculateZone(t.target);
-        document.getElementById(
-          "indicator-target-strip",
-        ).style.backgroundColor =
-          state.mode === "ERG" ? tgtZone.color : "#059669";
+        document.getElementById("val-power-3s").innerText = t.power3s || 0;
+        document.getElementById("val-power-10s").innerText = t.power10s || 0;
+
+        // Dials: full circle = 150% FTP.
+        const arc = (id, circ, v) => {
+          const frac = Math.max(0, Math.min(1, (v || 0) / (ftp * 1.5)));
+          document
+            .getElementById(id)
+            .setAttribute("stroke-dashoffset", (circ * (1 - frac)).toFixed(1));
+        };
+        arc("dial-10s", 753.9, t.power10s);
+        arc("dial-3s", 640.8, t.power3s);
 
         document.getElementById("val-cadence").innerText = Math.round(
           t.cadence,
@@ -1816,9 +2437,6 @@
 
         document.getElementById("time-elapsed").innerText = formatHHMMSS(
           state.clockTime,
-        );
-        document.getElementById("time-remaining").innerText = formatHHMMSS(
-          state.workoutTimeline.length - state.clockTime,
         );
 
         if (state.activeWorkout.blocks[state.activeBlockIndex]) {
@@ -1830,43 +2448,53 @@
         }
 
         renderHistoryTrace();
-        renderStaticProfiles(); // redraw profile + live playhead each frame
+        renderStaticProfiles(); // profile + live playhead
       }
 
       /**
-       * Canvas Visualization Pipelines
+       * Canvas Visualization Pipelines (sized to the element, crisp on retina)
        */
-      function renderStaticProfiles() {
-        const canvas = document.getElementById("canvas-profile");
+      function fitCanvas(canvas) {
+        const cw = canvas.clientWidth;
+        const ch = canvas.clientHeight;
+        if (!cw || !ch) return null;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const W = Math.round(cw * dpr);
+        const H = Math.round(ch * dpr);
+        if (canvas.width !== W || canvas.height !== H) {
+          canvas.width = W;
+          canvas.height = H;
+        }
         const ctx = canvas.getContext("2d");
-        const w = canvas.width;
-        const h = canvas.height;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        return { ctx, w: cw, h: ch };
+      }
+
+      function renderStaticProfiles() {
+        const fit = fitCanvas(document.getElementById("canvas-profile"));
+        if (!fit) return;
+        const { ctx, w, h } = fit;
 
         ctx.clearRect(0, 0, w, h);
-        if (state.workoutTimeline.length === 0) return;
-
         const totalSecs = state.workoutTimeline.length;
-        const maxPct = Math.max(
-          ...state.workoutTimeline.map((x) => x.pctFtp),
-          120,
-        );
+        if (totalSecs === 0) return;
 
-        state.activeWorkout.blocks.forEach((b, idx) => {
-          let blockStartSecs = 0;
-          for (let k = 0; k < idx; k++)
-            blockStartSecs += state.activeWorkout.blocks[k].d;
-
+        const maxPct = state.profileMaxPct || 120;
+        const ftp = getActiveProfile().ftp;
+        let blockStartSecs = 0;
+        state.activeWorkout.blocks.forEach((b) => {
           const xStart = (blockStartSecs / totalSecs) * w;
           const blockW = (b.d / totalSecs) * w;
-          const blockH = (b.p / maxPct) * (h - 20);
+          const blockH = (b.p / maxPct) * (h - 12);
           const yStart = h - blockH;
-
-          const mockPower = (b.p / 100) * getActiveProfile().ftp;
-          ctx.fillStyle = calculateZone(mockPower).color + "CC";
+          ctx.fillStyle = calculateZone((b.p / 100) * ftp).color + "CC";
           ctx.fillRect(xStart, yStart, blockW, blockH);
-          ctx.strokeStyle = "#1e293b";
-          ctx.lineWidth = 1;
-          ctx.strokeRect(xStart, yStart, blockW, blockH);
+          if (blockW > 3) {
+            ctx.strokeStyle = "#1e293b";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(xStart, yStart, blockW, blockH);
+          }
+          blockStartSecs += b.d;
         });
 
         if (state.clockTime > 0) {
@@ -1881,94 +2509,90 @@
       }
 
       function renderHistoryTrace() {
-        const canvas = document.getElementById("canvas-trace");
-        const ctx = canvas.getContext("2d");
-        const w = canvas.width;
-        const h = canvas.height;
+        const fit = fitCanvas(document.getElementById("canvas-trace"));
+        if (!fit) return;
+        const { ctx, w, h } = fit;
 
         ctx.clearRect(0, 0, w, h);
         if (state.trace.length === 0) return;
 
-        const maxVal = 400;
+        // Scale to the rider instead of a fixed 400 W ceiling.
+        const ftp = getActiveProfile().ftp || 250;
+        const peak = Math.max(...state.trace.map((p) => Math.max(p.p, p.tgt)));
+        const maxVal = Math.max(ftp * 1.5, peak * 1.1);
         const step = w / 180;
 
-        // Render Target
-        ctx.strokeStyle = "rgba(234, 179, 8, 0.4)";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        state.trace.forEach((pt, i) => {
-          const x = i * step;
-          const y = h - (pt.tgt / maxVal) * h;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-
-        // Render Actual Power Output Trace
-        ctx.strokeStyle = "#22c55e";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        state.trace.forEach((pt, i) => {
-          const x = i * step;
-          const y = h - (pt.p / maxVal) * h;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
+        const line = (key, color) => {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          state.trace.forEach((pt, i) => {
+            const x = i * step;
+            const y = h - (pt[key] / maxVal) * h;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+        };
+        line("tgt", "rgba(234, 179, 8, 0.4)");
+        line("p", "#22c55e");
       }
 
       const originalProcessTimeline = processActiveWorkoutTimeline;
       processActiveWorkoutTimeline = function () {
         originalProcessTimeline();
+        state.profileMaxPct = state.activeWorkout.blocks.reduce(
+          (m, b) => Math.max(m, b.p),
+          120,
+        );
         renderStaticProfiles();
       };
 
       /**
        * XML Serialization System (.tcx Generator)
        */
-      function executeDataTcxExportSequence() {
-        const active = getActiveProfile();
-        const isoTimestamp = new Date().toISOString();
-        const filenameStr = `openwatt-${Math.floor(Date.now() / 1000)}.tcx`;
-
+      function buildTcx(ride) {
+        const start = ride.startedAt;
+        const iso = (ms) => new Date(ms).toISOString();
+        const secs = ride.s.length;
         let wattsSum = 0;
         let wattsMax = 0;
-        state.history.forEach((h) => {
-          wattsSum += h.p;
-          if (h.p > wattsMax) wattsMax = h.p;
+        ride.s.forEach((x) => {
+          wattsSum += x[1];
+          if (x[1] > wattsMax) wattsMax = x[1];
         });
-        const avgWatts = Math.round(wattsSum / state.history.length);
+        const avgWatts = Math.round(wattsSum / secs);
+        const pts = ride.s
+          .map(
+            ([t, p, , cad, hr]) => `
+          <Trackpoint>
+            <Time>${iso(start + t * 1000)}</Time>${
+              hr > 0
+                ? `
+            <HeartRateBpm><Value>${hr}</Value></HeartRateBpm>`
+                : ""
+            }
+            <Cadence>${Math.max(0, Math.min(254, cad))}</Cadence>
+            <Extensions>
+              <TPX xmlns="http://www.garmin.com/xmlschemas/ActivityExtension/v2">
+                <Watts>${p}</Watts>
+              </TPX>
+            </Extensions>
+          </Trackpoint>`,
+          )
+          .join("");
 
-        let tcx = `<?xml version="1.0" encoding="UTF-8"?>
+        return `<?xml version="1.0" encoding="UTF-8"?>
 <TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:ns3="http://www.garmin.com/xmlschemas/ActivityExtension/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd">
   <Activities>
     <Activity Sport="Biking">
-      <Id>${isoTimestamp}</Id>
-      <Lap StartTime="${isoTimestamp}">
-        <TotalTimeSeconds>${state.history.length}</TotalTimeSeconds>
-        <DistanceMeters>${Math.round(state.history.length * 7.1)}</DistanceMeters>
+      <Id>${iso(start)}</Id>
+      <Lap StartTime="${iso(start)}">
+        <TotalTimeSeconds>${secs}</TotalTimeSeconds>
+        <DistanceMeters>${Math.round(secs * 7.1)}</DistanceMeters>
         <Intensity>Active</Intensity>
         <TriggerMethod>Manual</TriggerMethod>
-        <Track>`;
-
-        state.history.forEach((pt) => {
-          const trackpointTime = new Date(
-            Date.now() - (state.history.length - pt.t) * 1000,
-          ).toISOString();
-          tcx += `
-          <Trackpoint>
-            <Time>${trackpointTime}</Time>
-            <Cadence>${Math.round(pt.cad)}</Cadence>
-            <HeartRateBpm><Value>${pt.hr}</Value></HeartRateBpm>
-            <Extensions>
-              <TPX xmlns="http://www.garmin.com/xmlschemas/ActivityExtension/v2">
-                <Watts>${pt.p}</Watts>
-              </TPX>
-            </Extensions>
-          </Trackpoint>`;
-        });
-
-        tcx += `
+        <Track>${pts}
         </Track>
         <Extensions>
           <LX xmlns="http://www.garmin.com/xmlschemas/ActivityExtension/v2">
@@ -1980,16 +2604,44 @@
     </Activity>
   </Activities>
 </TrainingCenterDatabase>`;
+      }
 
-        const blob = new Blob([tcx], { type: "application/xml" });
+      // userTap=true when called from a click, so the iOS share sheet is allowed.
+      async function exportLastRide(userTap) {
+        const ride = loadLastRide();
+        if (!ride) {
+          toast("No saved ride to export.");
+          return;
+        }
+        const d = new Date(ride.startedAt);
+        const stamp = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}-${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}`;
+        const filename = `openwatt-${stamp}.tcx`;
+        const tcx = buildTcx(ride);
+
+        if (userTap && navigator.share && navigator.canShare) {
+          try {
+            const file = new File([tcx], filename, {
+              type: "application/octet-stream",
+            });
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({ files: [file], title: filename });
+              return;
+            }
+          } catch (e) {
+            if (e.name === "AbortError") return; // user closed the sheet
+            console.warn("Share failed, falling back to download", e);
+          }
+        }
+
+        const blob = new Blob([tcx], { type: "application/octet-stream" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = filenameStr;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
       }
 
       /**
@@ -2060,6 +2712,11 @@
           .addEventListener("change", (e) => {
             const preset = WORKOUT_PRESETS[e.target.value];
             if (!preset) return; // ignore the synthetic "imported" entry
+            if (state.runState !== "STOPPED") {
+              toast("Finish or end the current ride before switching workouts.");
+              buildUIElements(); // put the dropdown back
+              return;
+            }
             state.activeWorkout = JSON.parse(JSON.stringify(preset));
             state.clockTime = 0;
             state.activeBlockIndex = 0;
@@ -2080,7 +2737,23 @@
           .getElementById("btn-seg-skip")
           .addEventListener("click", () => mutateSection("SKIP"));
 
+        document
+          .getElementById("btn-end")
+          .addEventListener("click", () => {
+            if (state.runState === "PAUSED") terminateWorkoutRun();
+          });
+        document
+          .getElementById("btn-add-rider")
+          .addEventListener("click", addProfile);
+        document
+          .getElementById("btn-export-last")
+          .addEventListener("click", () => exportLastRide(true));
+
         window.addEventListener("keydown", (e) => {
+          // Don't hijack keys while typing (rider names, FTP, selects).
+          const tag = (e.target && e.target.tagName) || "";
+          if (/^(INPUT|SELECT|TEXTAREA)$/.test(tag) || e.metaKey || e.ctrlKey)
+            return;
           if (e.key === "ArrowLeft") mutateSection("RESTART");
           if (e.key === "ArrowRight") mutateSection("SKIP");
           if (e.key === "-" || e.key === "_") mutateSection("MINUS_30");
@@ -2154,6 +2827,7 @@
           .getElementById("file-input")
           .addEventListener("change", (e) => {
             if (e.target.files.length > 0) processFileHandle(e.target.files[0]);
+            e.target.value = ""; // allow re-picking the same file
           });
       }
 
@@ -2165,6 +2839,24 @@
 
       init();
     </script>
+
+    <div
+      id="toast"
+      class="hidden fixed left-1/2 -translate-x-1/2 bottom-[max(7.5rem,calc(env(safe-area-inset-bottom)+7rem))] md:bottom-20 z-[90] w-[calc(100%-2rem)] max-w-md bg-[#1a1a1a] border border-[#444] text-white text-sm rounded-xl shadow-2xl shadow-black px-4 py-3 flex items-center gap-3"
+    >
+      <div id="toast-msg" class="flex-1 leading-snug"></div>
+      <button
+        id="toast-action"
+        class="hidden shrink-0 bg-orange-600 hover:bg-orange-500 font-bold text-[11px] uppercase tracking-widest px-3 py-2 rounded"
+      ></button>
+      <button
+        id="toast-close"
+        aria-label="Dismiss"
+        class="shrink-0 text-[#888] hover:text-white px-1 text-lg leading-none"
+      >
+        &times;
+      </button>
+    </div>
 
     <div
       id="dropzone"
