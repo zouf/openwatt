@@ -1208,9 +1208,15 @@
         { id: "play_pause", name: "Start/Pause" },
       ];
 
+      // Built-in riders. Editable and deletable under Profile > Riders.
+      const BUILTIN_RIDERS = [
+        { id: "rider_matt", name: "Matt", ftp: 320, bias: 100 },
+        { id: "rider_kate", name: "Kate", ftp: 280, bias: 100 },
+      ];
+
       let state = {
-        profiles: [{ id: "p1", name: "Rider 1", ftp: 250, bias: 100 }],
-        activeProfileId: "p1",
+        profiles: BUILTIN_RIDERS.map((r) => ({ ...r })),
+        activeProfileId: BUILTIN_RIDERS[0].id,
         activeWorkout: JSON.parse(JSON.stringify(WORKOUT_PRESETS[1])),
         totalSecs: 0,
         runState: "STOPPED",
@@ -1314,6 +1320,29 @@
           if (p) {
             const parsed = JSON.parse(p);
             if (Array.isArray(parsed) && parsed.length) state.profiles = parsed;
+          }
+          // One-time: bring the built-in riders onto devices that already had
+          // saved riders. Skips a name that already exists, and drops the old
+          // untouched placeholder. Runs once, so deleting one later sticks.
+          if (!storeGet("openwatt_builtin_riders_v1")) {
+            state.profiles = state.profiles.filter(
+              (x) => !(x.id === "p1" && x.name === "Rider 1" && x.ftp === 250),
+            );
+            for (const r of BUILTIN_RIDERS) {
+              const taken = state.profiles.some(
+                (x) =>
+                  x.id === r.id ||
+                  x.name.trim().toLowerCase() === r.name.toLowerCase(),
+              );
+              if (!taken) state.profiles.push({ ...r });
+            }
+            state.profiles.sort(
+              (a, b) =>
+                (BUILTIN_RIDERS.findIndex((r) => r.name === a.name) + 1 || 99) -
+                (BUILTIN_RIDERS.findIndex((r) => r.name === b.name) + 1 || 99),
+            );
+            storeSet("openwatt_builtin_riders_v1", "1");
+            storeSet("openwatt_profiles_v2", JSON.stringify(state.profiles));
           }
           const ap = storeGet("openwatt_active_profile_v2");
           if (ap && state.profiles.some((x) => x.id === ap))

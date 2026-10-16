@@ -70,6 +70,28 @@ const open = async (withBle) => {
 
 // ---- Demo-mode behaviour (no Bluetooth) -------------------------------------
 let p = await open(false);
+const riders = await p.evaluate(() => state.profiles.map((r) => `${r.name}:${r.ftp}`).join(","));
+check("built-in riders Matt (320) and Kate (280), Matt active", riders === "Matt:320,Kate:280" && (await p.evaluate(() => getActiveProfile().name)) === "Matt", riders);
+
+// Existing device with the old placeholder plus a custom rider: built-ins added once.
+await p.evaluate(() => {
+  localStorage.clear();
+  localStorage.setItem("openwatt_profiles_v2", JSON.stringify([
+    { id: "p1", name: "Rider 1", ftp: 250, bias: 100 },
+    { id: "x", name: "kate", ftp: 265, bias: 100 },
+  ]));
+});
+await p.reload();
+await p.waitForTimeout(300);
+const migrated = await p.evaluate(() => state.profiles.map((r) => `${r.name}:${r.ftp}`).join(","));
+check("existing devices get Matt added, keep their own Kate, lose the placeholder", migrated === "Matt:320,kate:265", migrated);
+await p.evaluate(() => { removeProfile("rider_matt"); });
+await p.reload();
+await p.waitForTimeout(300);
+check("a deleted built-in rider stays deleted", !(await p.evaluate(() => state.profiles.some((r) => r.name === "Matt"))));
+await p.evaluate(() => localStorage.clear());
+await p.reload();
+await p.waitForTimeout(300);
 check("fits a 375px phone without horizontal scroll", (await p.evaluate(() => document.documentElement.scrollWidth)) <= 375);
 check("Bluetooth notice shown when unavailable", !(await p.$eval("#ble-notice", (e) => e.classList.contains("hidden"))));
 check("Tailwind is inlined (no CDN)", await p.evaluate(() => !document.querySelector('script[src*="tailwind"]') && getComputedStyle(document.body).display === "flex"));
@@ -156,7 +178,8 @@ check("reads HR relayed by the trainer", avg.hr === 151);
 await p.evaluate(() => { window.__ble.writes = []; state.clockTime = 598; state.blockTimeElapsed = 598; for (let i = 0; i < 3; i++) tickLoop(); });
 await p.waitForTimeout(300);
 const w = await p.evaluate(() => window.__ble.writes.map((x) => x[1] + (x[2] << 8)));
-check("new ERG target sent as soon as the block changes", w.includes(213), JSON.stringify(w));
+const ftpNow = await p.evaluate(() => getActiveProfile().ftp);
+check("new ERG target sent as soon as the block changes", w.includes(Math.round(ftpNow * 0.85)), JSON.stringify(w));
 
 await p.evaluate(() => { window.__refuseConnect = true; window.__device.gatt.disconnect(); tickLoop(); tickLoop(); });
 check("dropped trainer records zero watts, not demo data", await p.evaluate(() => state.history.slice(-2).every((h) => h.p === 0)));
