@@ -169,7 +169,7 @@
       </header>
 
       <main class="flex-1 flex flex-col relative">
-        <!-- TAB: WORKOUT (TrainerRoad Replica) -->
+        <!-- TAB: WORKOUT (ride cockpit) -->
         <section
           id="tab-workout"
           class="flex-1 flex flex-col w-full h-full block absolute inset-0 overflow-y-auto md:overflow-hidden"
@@ -949,6 +949,17 @@
           requestWakeLock();
       });
 
+      // A linear ramp as 15-second steps sampled at each step's midpoint, so
+      // the average matches the ramp (the engine holds one target per block).
+      function ramp(d, from, to) {
+        const steps = Math.max(1, Math.round(d / 15));
+        const each = d / steps;
+        return Array.from({ length: steps }, (_, i) => ({
+          d: Math.round(each),
+          p: Math.round((from + ((to - from) * (i + 0.5)) / steps) * 10) / 10,
+        }));
+      }
+
       const WORKOUT_PRESETS = [
         {
           id: "z1_rec",
@@ -1068,6 +1079,113 @@
             { d: 270, p: 50 },
             { d: 30, p: 250 },
             { d: 600, p: 45 },
+          ],
+        },
+        // ---- Matt's most-ridden indoor sessions ---------------------------
+        // Structures rebuilt from his own Strava rides (May to Oct 2026): lap
+        // boundaries give block lengths, ERG power plateaus give targets
+        // (FTP ~323 W at the time), one-minute laps between blocks are ramps.
+        {
+          id: "mz_stairs60",
+          name: "Stairstep 60",
+          desc: "60 min endurance, 4×12 at 60–70% · ridden 15×",
+          blocks: [
+            { d: 180, p: 50 },
+            { d: 120, p: 55 },
+            { d: 720, p: 60 },
+            ...ramp(60, 60, 65),
+            { d: 720, p: 65 },
+            ...ramp(60, 65, 70),
+            { d: 720, p: 70 },
+            ...ramp(60, 70, 60),
+            { d: 720, p: 60 },
+            ...ramp(240, 60, 50),
+          ],
+        },
+        {
+          id: "mz_build75",
+          name: "Build to 75",
+          desc: "60 min endurance, builds to 14 min at 75% · ridden 12×",
+          blocks: [
+            { d: 240, p: 50 },
+            { d: 180, p: 57 },
+            { d: 180, p: 64 },
+            { d: 900, p: 69 },
+            ...ramp(60, 69, 65),
+            { d: 840, p: 65 },
+            ...ramp(60, 65, 75),
+            { d: 840, p: 75 },
+            ...ramp(300, 75, 50),
+          ],
+        },
+        {
+          id: "mz_steady80",
+          name: "Long Steady 80",
+          desc: "80 min endurance, long blocks at 60–70% · ridden 12×",
+          blocks: [
+            { d: 300, p: 50 },
+            { d: 300, p: 55 },
+            { d: 480, p: 60 },
+            ...ramp(240, 60, 69),
+            { d: 600, p: 69 },
+            ...ramp(180, 69, 64),
+            { d: 1080, p: 64 },
+            ...ramp(120, 64, 70),
+            { d: 540, p: 70 },
+            ...ramp(240, 70, 60),
+            { d: 720, p: 60 },
+          ],
+        },
+        {
+          id: "mz_endur90",
+          name: "Endurance 90 Plus",
+          desc: "90 min endurance, 12 min at 75% late · ridden 7×",
+          blocks: [
+            { d: 240, p: 50 },
+            { d: 180, p: 55 },
+            { d: 180, p: 60 },
+            { d: 840, p: 65 },
+            ...ramp(60, 65, 70),
+            { d: 660, p: 70 },
+            ...ramp(60, 70, 65),
+            { d: 1080, p: 65 },
+            ...ramp(60, 65, 75),
+            { d: 720, p: 75 },
+            ...ramp(60, 75, 63),
+            { d: 660, p: 67 },
+            ...ramp(600, 67, 58),
+          ],
+        },
+        {
+          id: "mz_twin70",
+          name: "Twin Seventies",
+          desc: "60 min endurance, 15 + 14 min at 70% · ridden 6×",
+          blocks: [
+            { d: 150, p: 50 },
+            { d: 150, p: 55 },
+            { d: 150, p: 60 },
+            { d: 150, p: 65 },
+            { d: 900, p: 70 },
+            ...ramp(60, 70, 65),
+            { d: 840, p: 65 },
+            ...ramp(60, 65, 70),
+            { d: 840, p: 70 },
+            ...ramp(300, 70, 50),
+          ],
+        },
+        {
+          id: "mz_tempo30",
+          name: "Tempo Touch 30",
+          desc: "30 min, 3×6 at 69–74% · ridden 5×",
+          blocks: [
+            { d: 120, p: 49 },
+            { d: 180, p: 59 },
+            { d: 360, p: 69 },
+            ...ramp(60, 69, 74),
+            { d: 360, p: 74 },
+            { d: 60, p: 71 },
+            { d: 360, p: 71 },
+            ...ramp(300, 71, 50),
           ],
         },
       ];
