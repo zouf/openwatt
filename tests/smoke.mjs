@@ -96,6 +96,20 @@ check("fits a 375px phone without horizontal scroll", (await p.evaluate(() => do
 check("Bluetooth notice shown when unavailable", !(await p.$eval("#ble-notice", (e) => e.classList.contains("hidden"))));
 check("Tailwind is inlined (no CDN)", await p.evaluate(() => !document.querySelector('script[src*="tailwind"]') && getComputedStyle(document.body).display === "flex"));
 
+// chart preview: hovering a block shows its target and timing
+const ramps = await p.evaluate(() => {
+  const w = WORKOUT_PRESETS.find((x) => x.id === "mz_stairs60");
+  return buildSegments(w.blocks, 320).filter((g) => g.ramp).map((g) => `${g.a}-${g.b}`).join(",");
+});
+check("ramp steps are grouped into single ramps", ramps === "60-65,65-70,70-60,60-50", ramps);
+{
+  const box = await p.$eval("#chart-area", (e) => { e.scrollIntoView({ block: "center" }); const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
+  await p.touchscreen.tap(box.x + box.w * 0.5, box.y + box.h * 0.4);
+  await p.waitForTimeout(200);
+  const tip = await p.$eval("#chart-tip", (e) => (e.classList.contains("hidden") ? "" : e.innerText));
+  check("tapping the chart previews that block", /% FTP · \d+ W/.test(tip) && /Starts at/.test(tip), tip.replace(/\n+/g, " | "));
+}
+
 await p.click("#btn-engine-control");
 check("first Start without a trainer asks before a demo ride", await p.evaluate(() => state.runState === "STOPPED"));
 await p.click("#btn-engine-control");
