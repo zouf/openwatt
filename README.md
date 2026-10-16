@@ -22,7 +22,7 @@ Bluefy needs the page served over HTTPS, so use the hosted copy rather than a lo
 - Rides are saved on the device as you go. **Profile › Last Ride › Export .TCX** opens the iOS share sheet (Files, AirDrop, Mail).
 - Workouts: export a `.zwo` from TrainingPeaks to Files, then tap **Upload File**.
 
-There's no build step. The page loads Tailwind from its CDN, so the first load needs an internet connection.
+The app is one self-contained file: its CSS is compiled and inlined, so it works on a flaky connection once loaded. The only external request is the Space Grotesk web font, which falls back to the system font.
 
 If Web Bluetooth isn't available, OpenWatt falls back to **demo mode** with a simulated rider. You can still try the whole cockpit without hardware.
 
@@ -36,7 +36,10 @@ If Web Bluetooth isn't available, OpenWatt falls back to **demo mode** with a si
 - **Bias control**: scales all targets from 50% to 150%, saved per rider.
 - **Multiple rider profiles**: each has its own FTP and bias, stored in `localStorage`. Edit names and FTP under **Profile › Riders**.
 - **KICKR Bike button inspector (experimental)**: shows live hex/binary bytes from Wahoo's proprietary characteristics. You can bind button bits to actions such as skip, bias ±, grade ±, and toggle mode.
-- **TCX export**: per-second power, cadence, and HR, with TPX power extensions. The ride is checkpointed every 30 seconds so a crash or closed tab doesn't lose it.
+- **TCX export**: per-second power (the mean of all trainer readings in that second), cadence, and HR, with TPX power extensions. The ride is checkpointed every 15 seconds and when the app goes to the background; after a crash or reload, OpenWatt offers to resume where you left off.
+- **Workout memory**: the loaded workout (including an imported `.zwo`) survives a reload.
+- **Demo guard**: starting without a trainer asks first, and connecting a trainer mid-demo discards the simulated data.
+- **Trainer HR**: uses heart rate relayed by the trainer (a strap paired to the KICKR Bike) when no strap is connected directly.
 - **Auto-reconnect**: trainer and HR strap reconnect with backoff after a Bluetooth drop.
 
 ## Bluetooth services
@@ -51,9 +54,20 @@ If Web Bluetooth isn't available, OpenWatt falls back to **demo mode** with a si
 ## Repository layout
 
 ```
-index.html      The app (everything in one file)
-docs/spec.md    Full functional spec
-scripts/        One-off patch scripts used during development (already applied; kept for history)
+index.html              The app (everything in one file)
+docs/spec.md            Full functional spec
+tests/smoke.mjs         End-to-end checks against a simulated FTMS trainer
+scripts/build-css.mjs   Rebuilds the inlined Tailwind CSS
+scripts/                Older one-off patch scripts (already applied; kept for history)
+```
+
+## Development
+
+```
+npm install
+npx playwright install chromium
+npm test                 # runs tests/smoke.mjs
+npm run build:css        # after adding or changing Tailwind classes
 ```
 
 ## Known limitations
@@ -62,5 +76,7 @@ scripts/        One-off patch scripts used during development (already applied; 
 - There's no automatic TrainingPeaks sync because their API is limited to partners. Use manual `.zwo` import and `.tcx` export instead.
 - The KICKR Bike button mapping is reverse-engineered and may need tuning for your unit or firmware, using the inspector.
 - Distance in the TCX export is estimated from power, not GPS.
+- `.erg` ramps (two points with different watts) are imported as a step at the end value.
+- Free-ride blocks in `.zwo` files hold 50% FTP in ERG rather than releasing resistance.
 
 See [`docs/spec.md`](docs/spec.md) for full details.

@@ -2,7 +2,7 @@
 
 A single-file, self-contained web app that drives a smart trainer (FTMS-compatible, tuned for the Wahoo KICKR Bike) directly from the browser via Web Bluetooth. No account, no server, no telemetry leaves the machine. Built as an open alternative to TrainerRoad-style ERG apps, with a manual export/import bridge to TrainingPeaks.
 
-**File:** `openwatt.html` — open in desktop Chrome or Edge (Web Bluetooth required; Safari/Firefox unsupported).
+**File:** `index.html`, hosted at https://zouf.github.io/openwatt/. Open in desktop Chrome or Edge, or in Bluefy on iOS (Web Bluetooth required; Safari and Firefox unsupported).
 
 ---
 
